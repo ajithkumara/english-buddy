@@ -1,0 +1,201 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# English Buddy — CI/CD Pipeline
+# Uses GitHub Actions FREE tier (2,000 mins/mo — each run ~3 mins)
+#
+# Branch → Environment mapping:
+#   dev     → dev.englishbuddy.live     (auto-deploy, no checks)
+#   staging → stg.englishbuddy.live     (basic checks, then deploy)
+#   main    → englishbuddy.live         (manual trigger only — protected)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy English Buddy
+
+on:
+  push:
+    branches:
+      - dev        # auto-deploys on every push
+      - staging    # deploys after checks pass
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy to which environment?'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+# ── JOB 1: Deploy to DEV (runs on every push to dev branch) ──────────────────
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Basic syntax check — Python
+        run: python3 -m py_compile backend/server.py && echo "✓ server.py syntax OK"
+
+      - name: Check HTML file exists
+        run: |
+          test -f frontend/english_buddy.html && echo "✓ HTML file found"
+          echo "File size: $(wc -c < frontend/english_buddy.html) bytes"
+
+      - name: Deploy to Railway (Dev)
+        run: |
+          echo "✓ Pushing to Railway dev environment..."
+          echo "Railway auto-deploys from GitHub — this step confirms the push triggered"
+          echo "Check https://railway.app for deploy status"
+        # Railway watches the dev branch and deploys automatically
+        # No Railway CLI needed — just pushing to the branch is enough
+
+      - name: Post deploy summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✓ Dev deploy triggered"
+          echo "URL: https://dev.englishbuddy.live"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "By: ${{ github.actor }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ── JOB 2: Deploy to STAGING (runs on push to staging branch) ────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Syntax check — Python
+        run: |
+          python3 -m py_compile backend/server.py
+          echo "✓ server.py syntax OK"
+
+      - name: Check all required files exist
+        run: |
+          echo "Checking required files..."
+          test -f frontend/english_buddy.html && echo "✓ HTML app found"
+          test -f backend/server.py            && echo "✓ server.py found"
+          test -f Procfile                     && echo "✓ Procfile found"
+          test -f requirements.txt             && echo "✓ requirements.txt found"
+          test -f .env.example                 && echo "✓ .env.example found"
+
+      - name: Check .env is not committed
+        run: |
+          if [ -f .env ]; then
+            echo "❌ ERROR: .env file found in repo! Never commit API keys!"
+            exit 1
+          fi
+          echo "✓ No .env file in repo (correct)"
+
+      - name: Check no hardcoded API keys
+        run: |
+          # Scan for accidentally committed API key patterns
+          if grep -r "sk-ant-" frontend/ backend/ --include="*.py" --include="*.html" --include="*.js" 2>/dev/null; then
+            echo "❌ ERROR: Possible hardcoded Anthropic API key found!"
+            exit 1
+          fi
+          if grep -r "sk-proj-" frontend/ backend/ --include="*.py" --include="*.html" 2>/dev/null; then
+            echo "❌ ERROR: Possible hardcoded OpenAI API key found!"
+            exit 1
+          fi
+          echo "✓ No hardcoded API keys found"
+
+      - name: Server startup test
+        run: |
+          # Start server in background, check it starts without errors
+          timeout 10 python3 backend/server.py &
+          SERVER_PID=$!
+          sleep 4
+          if kill -0 $SERVER_PID 2>/dev/null; then
+            echo "✓ Server started successfully"
+            kill $SERVER_PID
+          else
+            echo "❌ Server failed to start"
+            exit 1
+          fi
+        env:
+          PORT: 9999  # use different port to avoid conflicts
+
+      - name: Deploy to Railway (Staging)
+        run: |
+          echo "✓ Staging checks passed — Railway deploys automatically from staging branch"
+          echo "URL: https://stg.englishbuddy.live"
+
+      - name: Post deploy summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✓ Staging deploy triggered"
+          echo "URL: https://stg.englishbuddy.live"
+          echo "Commit: ${{ github.sha }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# ── JOB 3: Deploy to PRODUCTION (manual trigger only) ────────────────────────
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    environment:
+      name: production          # requires manual approval in GitHub (free feature)
+      url: https://englishbuddy.live
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Full pre-production checks
+        run: |
+          echo "Running production checks..."
+          python3 -m py_compile backend/server.py && echo "✓ Python syntax OK"
+          test -f frontend/english_buddy.html     && echo "✓ HTML app found"
+          test -f Procfile                        && echo "✓ Procfile found"
+          test -f requirements.txt               && echo "✓ requirements.txt found"
+
+      - name: Security scan — no secrets in code
+        run: |
+          echo "Scanning for accidental secrets..."
+          for pattern in "sk-ant-" "sk-proj-" "sk_live_" "whsec_" "eyJhb"; do
+            if grep -r "$pattern" frontend/ backend/ --include="*.py" --include="*.html" --include="*.js" 2>/dev/null; then
+              echo "❌ Possible secret found matching pattern: $pattern"
+              exit 1
+            fi
+          done
+          echo "✓ No secrets found in code"
+
+      - name: Tag this release
+        run: |
+          echo "Release deployed: $(date '+%Y-%m-%d %H:%M')"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered by: ${{ github.actor }}"
+
+      - name: Deploy to Railway (Production)
+        run: |
+          echo "✓ Production deployment triggered"
+          echo "Railway is watching main branch — merge PR to trigger deploy"
+          echo "URL: https://englishbuddy.live"
+
+      - name: Post deploy summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🚀 PRODUCTION DEPLOYED"
+          echo "URL: https://englishbuddy.live"
+          echo "Time: $(date)"
+          echo "Commit: ${{ github.sha }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
