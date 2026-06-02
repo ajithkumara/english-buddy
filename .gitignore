@@ -1,0 +1,48 @@
+# ── Secrets — NEVER commit these ──────────────────────
+.env
+.env.local
+.env.production
+.env.*
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# ── Node (if added later) ─────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+# ── OS ────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ── Logs ─────────────────────────────────────────────
+*.log
+logs/
+server.log
+
+# ── Local test files ──────────────────────────────────
+test_*.html
+scratch/
+tmp/
