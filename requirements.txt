@@ -1,10 +1,11 @@
-# Current MVP — uses Python stdlib only (no pip installs needed)
-# Uncomment as you implement each phase:
+# English Buddy — Python dependencies
+# Phase 1 (current): stdlib only — no pip installs needed
+# server.py uses only: http.server, urllib, json, os, sys
 
-# Phase 1 — Auth + Payments
+# Optional — only needed for local development with .env file
+# Render sets env vars directly in dashboard so dotenv not needed there
+python-dotenv==1.0.1
+
+# Uncomment when implementing Phase 1 auth + payments:
 # supabase==2.10.0
 # stripe==10.12.0
-# python-dotenv==1.0.1
-
-# Phase 2 — Progress tracking
-# Pillow==10.3.0

@@ -1,0 +1,22 @@
+# Render deployment configuration
+# Docs: https://render.com/docs/render-yaml-specification
+
+services:
+  - type: web
+    name: englishbuddy-live
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python backend/server.py
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 8765
+      - key: ENVIRONMENT
+        value: production
+      # Add these manually in Render dashboard — never put real keys here:
+      # ANTHROPIC_API_KEY  → your real Claude API key
+      # STRIPE_SECRET      → add when implementing payments (Phase 1)
+      # SUPABASE_URL       → add when implementing auth (Phase 1)
+      # SUPABASE_KEY       → add when implementing auth (Phase 1)
