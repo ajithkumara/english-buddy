@@ -3,45 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>English Buddy</title>
+<title>English Buddy — Spoken Practice</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0f0f13;--surf:#1a1a22;--surf2:#22222e;--bdr:rgba(255,255,255,0.07);--acc:#7c6af7;--acc2:#a78bfa;--txt:#e8e8f0;--mut:#6b6b80;--red:#f87171;--grn:#34d399;--yel:#fbbf24; }
+  :root{--bg:#0f0f13;--surf:#1a1a22;--surf2:#22222e;--bdr:rgba(255,255,255,0.07);--acc:#7c6af7;--acc2:#a78bfa;--txt:#e8e8f0;--mut:#6b6b80;--red:#f87171;--grn:#34d399;--yel:#fbbf24}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;align-items:center}
   body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(80px);opacity:0.1;pointer-events:none;z-index:0}
   body::before{width:500px;height:500px;background:#7c6af7;top:-100px;left:-100px}
   body::after{width:400px;height:400px;background:#06b6d4;bottom:-80px;right:-80px}
-  .wrap{position:relative;z-index:1;width:100%;max-width:660px;padding:24px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .wrap{position:relative;z-index:1;width:100%;max-width:660px;padding:24px 16px 28px;display:flex;flex-direction:column;align-items:center;gap:16px}
   h1{font-family:'DM Serif Display',serif;font-size:1.9rem;letter-spacing:-0.02em;text-align:center}
   h1 em{font-style:italic;color:var(--acc2)}
   .sub{font-size:13px;color:var(--mut);text-align:center;margin-top:-10px}
 
-  /* Settings */
-  .panel{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:16px}
+  /* Profile panel — name only */
+  .panel{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px}
   .panel h3{font-size:11px;font-weight:600;color:var(--mut);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px}
   .row{display:flex;gap:8px;align-items:center;margin-bottom:9px}
-  .row label{font-size:12px;color:var(--mut);min-width:76px}
-  .row select,.row input{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none}
+  .row:last-child{margin-bottom:0}
+  .row label{font-size:12px;color:var(--mut);min-width:96px}
+  .row select,.row input[type=text]{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none}
   .row select:focus,.row input:focus{border-color:var(--acc)}
-  #savebtn{font-size:13px;padding:8px 16px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--acc2);cursor:pointer;white-space:nowrap}
-  #savebtn:hover{background:rgba(124,106,247,0.15)}
-  .rrow{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px}
-  #rdot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex-shrink:0}
-  #rdot.on{background:var(--grn);box-shadow:0 0 6px var(--grn)}
-  #rlbl{color:var(--mut)}
-  #rlbl.on{color:var(--grn)}
 
   /* Topics */
   .pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
-  .pill{font-size:12px;padding:6px 13px;border-radius:100px;border:1px solid var(--bdr);background:var(--surf);color:var(--mut);cursor:pointer;user-select:none;transition:all 0.15s}
+  .pill{font-size:12px;padding:6px 13px;border-radius:100px;border:1px solid var(--bdr);background:var(--surf);color:var(--mut);cursor:pointer;user-select:none;transition:all .15s}
   .pill:hover{border-color:var(--acc);color:var(--acc2)}
-  .pill.on{background:rgba(124,106,247,0.15);border-color:var(--acc);color:var(--acc2)}
+  .pill.on{background:rgba(124,106,247,.15);border-color:var(--acc);color:var(--acc2)}
 
   /* Avatar */
   .avbox{display:flex;flex-direction:column;align-items:center;gap:4px}
   #av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#7c6af7,#a78bfa);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:32px;color:#fff;position:relative}
-  .ring{position:absolute;border-radius:50%;border:2px solid rgba(167,139,250,0.35);display:none;animation:rexp 2s ease-out infinite}
+  .ring{position:absolute;border-radius:50%;border:2px solid rgba(167,139,250,.35);display:none;animation:rexp 2s ease-out infinite}
   .ring:nth-child(2){animation-delay:.65s}.ring:nth-child(3){animation-delay:1.3s}
   @keyframes rexp{0%{width:84px;height:84px;opacity:.6}100%{width:155px;height:155px;opacity:0}}
   #av.speaking .ring{display:block}
@@ -54,7 +48,7 @@
   @keyframes wb{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
 
   /* Transcript */
-  #tx{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px;min-height:120px;max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+  #tx{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px;min-height:120px;max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
   #tx::-webkit-scrollbar{width:4px}#tx::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
   .bub{max-width:86%;padding:9px 13px;border-radius:13px;font-size:14px;line-height:1.6;animation:pi .2s ease-out}
   @keyframes pi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
@@ -74,57 +68,49 @@
   #mic:not(:disabled):hover svg,#mic.rec svg{stroke:var(--red)}
   #mhint{font-size:12px;color:var(--mut);text-align:center}
 
-  /* Voice */
+  /* Voice selector */
   .vrow{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
   #vsel{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;outline:none;max-width:250px}
 
-  /* Debug */
-  #dbg{width:100%;background:#060609;border:1px solid #1a1a2e;border-radius:12px;overflow:hidden}
+  /* Debug — hidden by default in prod, toggle with button */
+  #dbg{width:100%;background:#060609;border:1px solid #1a1a2e;border-radius:12px;overflow:hidden;display:none}
+  #dbg.show{display:block}
   #dbgbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #1a1a2e;background:#0a0a12}
   #dbgbar span{font-size:11px;color:#5555aa;font-family:monospace}
   #dbgbar button{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid #2a2a40;background:#111;color:#777;cursor:pointer}
-  #dbgbar button:hover{background:#1a1a22;color:#aaa}
   #dlog{height:160px;overflow-y:auto;padding:8px 12px;font-size:11px;font-family:monospace;display:flex;flex-direction:column;gap:1px}
   #dlog::-webkit-scrollbar{width:3px}#dlog::-webkit-scrollbar-thumb{background:#2a2a40;border-radius:2px}
-  .dl{color:#6666aa;padding:1px 0}
-  .dl.ok{color:#34d399}.dl.er{color:#f87171}.dl.wn{color:#fbbf24}.dl.if{color:#a78bfa}
+  .dl{color:#6666aa;padding:1px 0}.dl.ok{color:#34d399}.dl.er{color:#f87171}.dl.wn{color:#fbbf24}.dl.if{color:#a78bfa}
+
+  /* Debug toggle link */
+  #dbgtoggle{font-size:11px;color:var(--mut);cursor:pointer;opacity:.5;text-decoration:underline;text-underline-offset:2px}
+  #dbgtoggle:hover{opacity:1}
 </style>
 </head>
 <body>
 <div class="wrap">
+
   <h1>English <em>Buddy</em></h1>
   <p class="sub">Your spoken English practice partner</p>
 
+  <!-- Profile — name and partner prefs only, no API key -->
   <div class="panel">
-    <h3>Settings</h3>
-    <div class="row">
-      <label>AI Backend</label>
-      <select id="bksel">
-        <option value="claude">Claude (Anthropic)</option>
-        <option value="openai">ChatGPT (OpenAI)</option>
-        <option value="deepseek">DeepSeek</option>
-      </select>
-    </div>
-    <div class="row">
-      <label>API Key</label>
-      <input type="password" id="apikey" placeholder="Paste your API key here" autocomplete="off">
-      <button id="savebtn">Save</button>
-    </div>
+    <h3>Your profile</h3>
     <div class="row">
       <label>Your name</label>
       <input type="text" id="uname" placeholder="e.g. Kasun" maxlength="20">
     </div>
     <div class="row">
       <label>Partner name</label>
-      <input type="text" id="pnameinput" placeholder="e.g. Alex, Sam, Sarah" maxlength="20" value="Alex">
+      <input type="text" id="pnameinput" placeholder="e.g. Alex, Sarah" maxlength="20" value="Alex">
       <select id="gendersel" style="max-width:100px">
         <option value="male">♂ Male</option>
         <option value="female">♀ Female</option>
       </select>
     </div>
-    <div class="rrow"><div id="rdot"></div><span id="rlbl">Paste your API key and click Save</span></div>
   </div>
 
+  <!-- Topics -->
   <div class="pills">
     <div class="pill on" data-t="free">Free chat</div>
     <div class="pill" data-t="cricket">Cricket</div>
@@ -135,424 +121,291 @@
     <div class="pill" data-t="news">World news</div>
   </div>
 
+  <!-- Avatar -->
   <div class="avbox">
     <div id="av" class="idle">
       <div class="ring"></div><div class="ring"></div><div class="ring"></div>
       <span id="avltr">A</span>
     </div>
     <div id="avname">Alex</div>
-    <div id="avst">Waiting…</div>
-    <div id="wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div id="avst">Press the mic and start talking</div>
+    <div id="wave">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
   </div>
 
-  <div id="tx"><div id="hint">Save your API key above, then press the mic and talk.</div></div>
+  <!-- Transcript -->
+  <div id="tx">
+    <div id="hint">Press the mic and start talking.<br>Alex will reply out loud.</div>
+  </div>
 
-  <button id="mic" disabled>
-    <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+  <!-- Mic — enabled immediately, no API key needed from user -->
+  <button id="mic">
+    <svg viewBox="0 0 24 24">
+      <rect x="9" y="2" width="6" height="12" rx="3"/>
+      <path d="M5 10a7 7 0 0 0 14 0"/>
+      <line x1="12" y1="19" x2="12" y2="22"/>
+      <line x1="8" y1="22" x2="16" y2="22"/>
+    </svg>
   </button>
-  <div id="mhint">Save your API key to enable the mic</div>
+  <div id="mhint">Tap to speak · tap again when done</div>
 
+  <!-- Voice selector -->
   <div class="vrow">
     <label for="vsel">Voice:</label>
-    <select id="vsel"><option value="">Loading voices…</option></select>
+    <select id="vsel"></select>
   </div>
 
+  <!-- Debug toggle — hidden link, useful when troubleshooting -->
+  <span id="dbgtoggle" onclick="toggleDbg()">debug</span>
   <div id="dbg">
     <div id="dbgbar">
       <span>🔍 Debug Log</span>
-      <div style="display:flex;gap:6px">
-        <button onclick="clearKey()">🗑 Clear key</button>
-        <button onclick="dlog.innerHTML=''">Clear log</button>
-      </div>
+      <button onclick="document.getElementById('dlog').innerHTML=''">Clear</button>
     </div>
     <div id="dlog"></div>
   </div>
-</div>
 
+</div>
 <script>
+// ── Prompts ────────────────────────────────────────────────────────────────
 const TOPICS = {
-  free:    'You are {P}, a warm friendly funny English conversation partner chatting with {U} from Sri Lanka. Be natural, curious, react genuinely. Ask one follow-up question. Reply in 1-3 short spoken sentences ONLY. No lists, no markdown, no bullet points.',
-  cricket: 'You are {P}, a passionate cricket fan talking with {U} from Sri Lanka. Talk about Sri Lanka\'s team, matches, players, IPL, World Cups. 1-3 short spoken sentences, casual.',
-  food:    'You are {P}, someone who loves Sri Lankan food, talking with {U}. Discuss kottu, hoppers, rice and curry, street food. 1-3 warm spoken sentences.',
-  travel:  'You are {P}, a curious traveller chatting with {U} from Sri Lanka. Discuss travel in Sri Lanka and abroad. 1-3 casual spoken sentences.',
-  work:    'You are {P}, a supportive friend chatting with {U} about work and careers. Encouraging, practical. 1-3 conversational sentences.',
-  tech:    'You are {P}, a tech enthusiast chatting with {U}. Discuss AI, apps, coding, smartphones. 1-3 spoken sentences.',
-  news:    'You are {P}, a thoughtful curious friend discussing world news with {U}. Balanced, ask opinions. 1-3 casual sentences.'
+  free:    'You are {P}, a warm friendly funny English conversation partner chatting with {U}. React genuinely, ask one follow-up question. Reply in 1-3 short spoken sentences ONLY. No lists, no markdown.',
+  cricket: 'You are {P}, a passionate cricket fan talking with {U}. Talk about cricket — teams, matches, players, World Cups. Ask one question back. 1-3 short sentences, casual.',
+  food:    'You are {P}, someone who loves Sri Lankan food, chatting with {U}. Discuss kottu, hoppers, rice and curry, street food. 1-3 warm spoken sentences.',
+  travel:  'You are {P}, a curious traveller chatting with {U}. Talk about travel in Sri Lanka and abroad. 1-3 casual sentences, ask one question.',
+  work:    'You are {P}, a supportive friend chatting with {U} about work and careers. Encouraging tone. 1-3 conversational sentences.',
+  tech:    'You are {P}, a tech enthusiast chatting with {U}. Discuss AI, apps, smartphones, coding. 1-3 spoken sentences.',
+  news:    'You are {P}, a thoughtful friend discussing world news with {U}. Balanced, curious. Ask opinions. 1-3 casual sentences.'
 };
 
-// State
-let topic='free', history=[], recording=false, speaking=false, finalTxt='', ib=null, recog=null, voices=[];
-let pname = 'Alex', $ = id => document.getElementById(id);
+// ── State ──────────────────────────────────────────────────────────────────
+let topic='free', history=[], recording=false, speaking=false;
+let finalTxt='', ib=null, recog=null, voices=[];
+const $=id=>document.getElementById(id);
 
-// DOM
-const avEl=$('av'), avst=$('avst'), avltr=$('avltr');
+// ── DOM refs ───────────────────────────────────────────────────────────────
+const avEl=$('av'), avst=$('avst'), avltr=$('avltr'), avnameEl=$('avname');
 const waveEl=$('wave'), txEl=$('tx'), micEl=$('mic'), mhint=$('mhint');
-const rdot=$('rdot'), rlbl=$('rlbl'), vsel=$('vsel'), dlog=$('dlog');
-const apikeyEl=$('apikey'), bksel=$('bksel'), unameEl=$('uname'), savebtn=$('savebtn');
-const pnameEl=$('pnameinput'), genderEl=$('gendersel');
+const vsel=$('vsel'), dlog=$('dlog');
+const unameEl=$('uname'), pnameEl=$('pnameinput'), genderEl=$('gendersel');
 
-// ── Log ─────────────────────────────────────────────────────────────────────
-function log(msg, cls='') {
-  console.log('[EB]', msg);
-  const d = document.createElement('div');
-  d.className = 'dl ' + cls;
-  d.textContent = new Date().toLocaleTimeString() + '  ' + msg;
-  dlog.appendChild(d);
-  dlog.scrollTop = dlog.scrollHeight;
+// ── Helpers ────────────────────────────────────────────────────────────────
+function pname(){ return pnameEl.value.trim() || 'Alex'; }
+function uname(){ return unameEl.value.trim() || 'friend'; }
+function tpl(s){ return s.replace(/{P}/g,pname()).replace(/{U}/g,uname()); }
+
+function log(msg,cls=''){
+  const d=document.createElement('div');
+  d.className='dl '+cls;
+  d.textContent=new Date().toLocaleTimeString()+' '+msg;
+  dlog.appendChild(d); dlog.scrollTop=dlog.scrollHeight;
+  console.log('[EB]',msg);
 }
 
-// ── Ready state ──────────────────────────────────────────────────────────────
-function setReady(yes) {
-  micEl.disabled = !yes;
-  rdot.className = yes ? 'on' : '';
-  rlbl.className = yes ? 'on' : '';
-  rlbl.textContent = yes ? 'Ready — pick a topic and press the mic' : 'Paste your API key and click Save';
-  mhint.textContent = yes ? 'Tap mic to speak  ·  tap again when done' : 'Save your API key to enable the mic';
-  log(yes ? '✓ App is READY' : '⚠ Not ready — need API key', yes ? 'ok' : 'wn');
+function toggleDbg(){
+  $('dbg').classList.toggle('show');
 }
 
-// ── Persist ──────────────────────────────────────────────────────────────────
-function load() {
-  log('── STARTUP ─────────────────────────', 'if');
-  const k  = localStorage.getItem('eb_k')  || '';
-  const b  = localStorage.getItem('eb_b')  || 'claude';
-  const un = localStorage.getItem('eb_un') || '';
-  bksel.value = b;
-  unameEl.value = un;
-  const pn = localStorage.getItem('eb_pn') || 'Alex';
-  const gd = localStorage.getItem('eb_gd') || 'male';
-  pnameEl.value = pn;
-  genderEl.value = gd;
-  pname = pn;
-  $('avltr').textContent = pn.charAt(0).toUpperCase();
-  $('avname').textContent = pn;
-  if (k) {
-    apikeyEl.value = '••••••••••••••••';
-    apikeyEl.dataset.real = k;
-    log('Stored key: len=' + k.length + '  first8=' + k.slice(0,8), 'ok');
-    const bad = [...k].filter(c => c.charCodeAt(0) > 127);
-    if (bad.length) {
-      log('⚠ KEY HAS INVALID CHARS — click "Clear key" and re-paste!', 'er');
-    } else {
-      log('Key looks clean (all ASCII)', 'ok');
-    }
-  } else {
-    log('No key stored yet', 'wn');
-  }
-  log('Backend=' + b + '  User=' + (un||'(not set)'), 'if');
-  setReady(!!k);
+// ── Persist user prefs (name only — no API keys) ──────────────────────────
+function loadPrefs(){
+  unameEl.value       = localStorage.getItem('eb_un')  || '';
+  pnameEl.value       = localStorage.getItem('eb_pn')  || 'Alex';
+  genderEl.value      = localStorage.getItem('eb_gd')  || 'female';
+  avltr.textContent   = pname().charAt(0).toUpperCase();
+  avnameEl.textContent= pname();
 }
-
-apikeyEl.addEventListener('focus', () => {
-  if (apikeyEl.value.startsWith('•')) apikeyEl.value = apikeyEl.dataset.real || '';
-});
-apikeyEl.addEventListener('blur', () => {
-  if (apikeyEl.value && !apikeyEl.value.startsWith('•')) {
-    apikeyEl.dataset.real = apikeyEl.value;
-    apikeyEl.value = '••••••••••••••••';
-  }
-});
-
-savebtn.addEventListener('click', () => {
-  // Strip non-printable-ASCII
-  let k = (apikeyEl.dataset.real || apikeyEl.value).replace(/[^\x20-\x7E]/g,'').trim();
-  if (!k) { savebtn.textContent='No key!'; setTimeout(()=>savebtn.textContent='Save',1500); return; }
-  const b  = bksel.value;
-  const un = unameEl.value.trim();
-  const pn = pnameEl.value.trim() || 'Alex';
-  const gd = genderEl.value;
-  localStorage.setItem('eb_k',  k);
-  localStorage.setItem('eb_b',  b);
-  localStorage.setItem('eb_un', un);
-  localStorage.setItem('eb_pn', pn);
-  localStorage.setItem('eb_gd', gd);
-  pname = pn;
-  $('avltr').textContent = pn.charAt(0).toUpperCase();
-  $('avname').textContent = pn;
-  pickVoiceForGender(gd);
-  apikeyEl.dataset.real = k;
-  savebtn.textContent = 'Saved ✓';
-  setTimeout(()=>savebtn.textContent='Save', 2000);
-  log('✓ Key saved: len=' + k.length + '  backend=' + b + '  user=' + (un||'friend'), 'ok');
-  setReady(true);
-});
-
-function clearKey() {
-  localStorage.removeItem('eb_k');
-  apikeyEl.value = '';
-  apikeyEl.dataset.real = '';
-  setReady(false);
-  log('✓ Saved key cleared — paste fresh key and click Save', 'ok');
+function savePrefs(){
+  localStorage.setItem('eb_un', unameEl.value.trim());
+  localStorage.setItem('eb_pn', pnameEl.value.trim());
+  localStorage.setItem('eb_gd', genderEl.value);
+  avltr.textContent   = pname().charAt(0).toUpperCase();
+  avnameEl.textContent= pname();
+  pickVoiceForGender(genderEl.value);
 }
+// Auto-save prefs on any change
+[unameEl, pnameEl, genderEl].forEach(el => el.addEventListener('change', savePrefs));
 
-// ── Topics ───────────────────────────────────────────────────────────────────
-document.querySelectorAll('.pill').forEach(p => {
-  p.addEventListener('click', () => {
+// ── Topics ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.pill').forEach(p=>{
+  p.addEventListener('click',()=>{
     document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
-    p.classList.add('on');
-    topic = p.dataset.t;
-    history = [];
-    speaking = false;
-    window.speechSynthesis.cancel();
-    avEl.className = 'idle';
-    txEl.innerHTML = '<div id="hint" style="color:var(--mut);font-size:13px;text-align:center;margin:auto;line-height:1.7">Topic changed. Press mic to start.</div>';
-    avst.textContent = 'Ready to chat';
-    log('Topic: ' + topic, 'if');
+    p.classList.add('on'); topic=p.dataset.t;
+    history=[];
+    speaking=false; window.speechSynthesis.cancel();
+    avEl.className='idle';
+    txEl.innerHTML='<div id="hint" style="color:var(--mut);font-size:13px;text-align:center;margin:auto;line-height:1.7">Topic changed. Press mic to start.</div>';
+    avst.textContent='Ready to chat';
+    log('Topic: '+topic,'if');
   });
 });
 
-// ── Voices ───────────────────────────────────────────────────────────────────
-function pickVoiceForGender(gender) {
-  if (!voices.length) return;
-  const maleNames   = ['david', 'mark', 'james', 'ryan', 'guy', 'male', 'george', 'richard', 'daniel', 'arthur', 'oliver', 'thomas'];
-  const femaleNames = ['zira', 'female', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny', 'natasha', 'salli', 'joanna', 'kendra', 'kimberly', 'ivy'];
-  const keywords = gender === 'male' ? maleNames : femaleNames;
-  const match = voices.findIndex(v => keywords.some(k => v.name.toLowerCase().includes(k)));
-  if (match >= 0) {
-    vsel.value = match;
-    log('✓ Voice set to ' + voices[match].name + ' (' + gender + ')', 'ok');
-  } else {
-    // Fallback: pick any Google voice, try to guess by name
-    const google = voices.findIndex(v => v.name.toLowerCase().includes('google'));
-    if (google >= 0) vsel.value = google;
-    log('No exact ' + gender + ' voice found, using: ' + voices[vsel.value]?.name, 'wn');
-  }
-}
-
-function fillVoices() {
-  const all = window.speechSynthesis.getVoices();
-  const en  = all.filter(v => v.lang.startsWith('en'));
-  if (!en.length) { log('No English voices yet, will retry…', 'wn'); return; }
-  voices = en.sort((a,b)=>{
-    const s = v => v.name.includes('Google')?0 : v.name.match(/Samantha|Karen|Zira|David/)?1:2;
+// ── Voices ─────────────────────────────────────────────────────────────────
+function fillVoices(){
+  const en=window.speechSynthesis.getVoices().filter(v=>v.lang.startsWith('en'));
+  if(!en.length) return;
+  voices=en.sort((a,b)=>{
+    const s=v=>v.name.includes('Google')?0:v.name.match(/Samantha|Karen|Zira|David/)?1:2;
     return s(a)-s(b);
   });
-  vsel.innerHTML = '';
+  vsel.innerHTML='';
   voices.forEach((v,i)=>{
     const o=document.createElement('option');
     o.value=i; o.textContent=v.name+(v.localService?'':' ☁');
     vsel.appendChild(o);
   });
-  // Prefer Google US English
-  const best = voices.findIndex(v=>v.name.toLowerCase().includes('google')&&v.lang==='en-US');
-  if (best>=0) vsel.value=best;
-  log('✓ Voices: ' + voices.length + ' en voices — selected: ' + voices[vsel.value]?.name, 'ok');
-  pickVoiceForGender(localStorage.getItem('eb_gd') || 'male');
+  pickVoiceForGender(genderEl.value);
+  log('✓ Voices: '+voices.length+' — using: '+voices[vsel.value]?.name,'ok');
 }
-// Chrome loads voices async — try now and on event
+window.speechSynthesis.onvoiceschanged=fillVoices;
 fillVoices();
-window.speechSynthesis.onvoiceschanged = fillVoices;
-// Extra retry after 1s in case event didn't fire
-setTimeout(fillVoices, 1000);
+setTimeout(fillVoices,800);
 
-function getVoice() { return voices[parseInt(vsel.value)] || voices[0] || null; }
+function pickVoiceForGender(g){
+  if(!voices.length) return;
+  const male  =['david','mark','james','ryan','guy','george','richard','daniel','arthur','oliver'];
+  const female=['zira','samantha','karen','susan','linda','aria','jenny','natasha','female'];
+  const kw = g==='male' ? male : female;
+  const idx = voices.findIndex(v=>kw.some(k=>v.name.toLowerCase().includes(k)));
+  if(idx>=0){ vsel.value=idx; return; }
+  const google=voices.findIndex(v=>v.name.toLowerCase().includes('google'));
+  if(google>=0) vsel.value=google;
+}
+function getVoice(){ return voices[parseInt(vsel.value)]||voices[0]||null; }
 
-// ── TTS ──────────────────────────────────────────────────────────────────────
-function speak(text) {
-  return new Promise(resolve => {
+// ── TTS ────────────────────────────────────────────────────────────────────
+function speak(text){
+  return new Promise(resolve=>{
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.voice  = getVoice();
-    u.rate   = 0.93;
-    u.pitch  = 1.05;
-    u.volume = 1;
-    speaking = true;
-    avEl.className = 'speaking';
-    avst.textContent = 'Speaking…';
-    log('🔊 Speaking: ' + text.slice(0,70) + (text.length>70?'…':''), 'if');
-    u.onend = () => {
-      speaking = false; avEl.className='idle';
-      avst.textContent='Your turn';
-      log('✓ Done speaking', 'ok');
-      resolve();
-    };
-    u.onerror = e => {
-      log('❌ TTS error: ' + e.error, 'er');
-      speaking = false; avEl.className='idle'; resolve();
-    };
+    const u=new SpeechSynthesisUtterance(text);
+    u.voice=getVoice(); u.rate=0.93; u.pitch=1.05; u.volume=1;
+    speaking=true; avEl.className='speaking';
+    avst.textContent='Speaking…';
+    log('🔊 '+text.slice(0,70)+(text.length>70?'…':''),'if');
+    u.onend=()=>{ speaking=false; avEl.className='idle'; avst.textContent='Your turn'; log('✓ Done speaking','ok'); resolve(); };
+    u.onerror=e=>{ log('❌ TTS: '+e.error,'er'); speaking=false; avEl.className='idle'; resolve(); };
     window.speechSynthesis.speak(u);
   });
 }
 
-// ── AI ───────────────────────────────────────────────────────────────────────
-async function aiReply(userText) {
-  const key = (localStorage.getItem('eb_k')||'').replace(/[^\x20-\x7E]/g,'').trim();
-  const bk  = localStorage.getItem('eb_b') || 'claude';
-  const un  = localStorage.getItem('eb_un') || 'friend';
+// ── AI call — no API key in browser, server handles it ─────────────────────
+async function aiReply(userText){
+  avst.textContent='Thinking…'; avEl.className='idle';
+  history.push({role:'user',content:userText});
+  const sys=tpl(TOPICS[topic]);
+  log('→ Calling AI…','if');
 
-  log('→ AI call: backend=' + bk + '  keyLen=' + key.length, 'if');
+  try{
+    // POST to /proxy — server.py injects the API key server-side
+    const r=await fetch('/proxy',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        url:'https://api.anthropic.com/v1/messages',
+        headers:{
+          'Content-Type':'application/json',
+          'anthropic-version':'2023-06-01'
+          // x-api-key is injected by server.py — never in the browser
+        },
+        body:{
+          model:'claude-sonnet-4-5',
+          max_tokens:200,
+          system:sys,
+          messages:history
+        }
+      })
+    });
 
-  if (!key) {
-    addBubble('⚠ No API key — click Save first.', 'er');
-    log('❌ No API key!', 'er'); return;
-  }
+    if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+': '+t.slice(0,200)); }
+    const d=await r.json();
+    log('✓ Response: '+JSON.stringify(d).slice(0,120),'ok');
+    if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
 
-  avst.textContent = 'Thinking…'; avEl.className='idle';
-  history.push({role:'user', content:userText});
+    let reply=(d.content?.[0]?.text||'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[-•]\s/gm,'').trim();
+    if(!reply) reply='Sorry, I missed that. Can you say it again?';
 
-  const sys = TOPICS[topic].replace(/{P}/g, pname).replace(/{U}/g, un||'friend');
-
-  try {
-    let reply = '';
-
-    if (bk === 'claude') {
-      log('→ Fetching Claude via proxy…', 'if');
-      const r = await fetch('/proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: 'https://api.anthropic.com/v1/messages',
-          headers: {
-            'Content-Type':      'application/json',
-            'x-api-key':         key,
-            'anthropic-version': '2023-06-01'
-          },
-          body: {
-            model:      'claude-sonnet-4-5',
-            max_tokens: 200,
-            system:     sys,
-            messages:   history
-          }
-        })
-      });
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error('HTTP ' + r.status + ': ' + t.slice(0,200));
-      }
-      const d = await r.json();
-      log('✓ Claude response: ' + JSON.stringify(d).slice(0,150), 'ok');
-      if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
-      reply = d.content?.[0]?.text || '';
-
-    } else if (bk === 'openai') {
-      log('→ Fetching OpenAI via proxy…', 'if');
-      const r = await fetch('/proxy', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          url: 'https://api.openai.com/v1/chat/completions',
-          headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
-          body: {model:'gpt-4o-mini',max_tokens:200,messages:[{role:'system',content:sys},...history]}
-        })
-      });
-      if (!r.ok) { const t=await r.text(); throw new Error('HTTP '+r.status+': '+t.slice(0,200)); }
-      const d = await r.json();
-      log('✓ OpenAI response: ' + JSON.stringify(d).slice(0,150), 'ok');
-      reply = d.choices?.[0]?.message?.content || '';
-
-    } else if (bk === 'deepseek') {
-      log('→ Fetching DeepSeek via proxy…', 'if');
-      const r = await fetch('/proxy', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          url: 'https://api.deepseek.com/chat/completions',
-          headers: {'Content-Type':'application/json','Authorization':'Bearer '+key},
-          body: {model:'deepseek-chat',max_tokens:200,messages:[{role:'system',content:sys},...history]}
-        })
-      });
-      if (!r.ok) { const t=await r.text(); throw new Error('HTTP '+r.status+': '+t.slice(0,200)); }
-      const d = await r.json();
-      log('✓ DeepSeek response: ' + JSON.stringify(d).slice(0,150), 'ok');
-      reply = d.choices?.[0]?.message?.content || '';
-    }
-
-    reply = reply.replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[-•]\s/gm,'').trim();
-    if (!reply) reply = 'Sorry, I missed that. Can you say it again?';
-    log('✓ Reply: ' + reply.slice(0,80), 'ok');
     history.push({role:'assistant',content:reply});
-    addBubble(reply, 'a');
+    addBubble(reply,'a');
     await speak(reply);
 
-  } catch(e) {
-    log('❌ ERROR: ' + e.message, 'er');
-    addBubble('⚠ Error: ' + e.message, 'er');
-    avst.textContent = 'Error'; avEl.className='idle';
+  }catch(e){
+    log('❌ ERROR: '+e.message,'er');
+    addBubble('⚠ '+e.message,'er');
+    avst.textContent='Error'; avEl.className='idle';
   }
 }
 
-// ── Bubbles ──────────────────────────────────────────────────────────────────
-function addBubble(text, cls) {
+function addBubble(text,cls){
   const h=document.getElementById('hint'); if(h) h.remove();
   const d=document.createElement('div');
   d.className='bub '+cls; d.textContent=text;
   txEl.appendChild(d); txEl.scrollTop=txEl.scrollHeight;
 }
 
-// ── Speech recognition ───────────────────────────────────────────────────────
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (!SR) {
-  log('❌ SpeechRecognition NOT available — must use Google Chrome!', 'er');
-  addBubble('⚠ Wrong browser! Open this file in Google Chrome.', 'er');
-} else {
-  recog = new SR();
-  recog.lang = 'en-US';
-  recog.interimResults = true;
-  recog.continuous = true;
-  recog.maxAlternatives = 1;
-
-  recog.onstart  = () => log('🎙 Mic started', 'ok');
-  recog.onend    = () => {
-    log('Mic ended (recording=' + recording + ')', '');
-    if (recording) { try { recog.start(); } catch(e){ log('Restart err: '+e.message,'er'); } }
-  };
-  recog.onerror  = e => {
-    if (e.error === 'no-speech') return;
-    log('❌ Mic error: ' + e.error, 'er');
-    if (e.error === 'not-allowed') addBubble('⚠ Mic permission denied — allow mic in Chrome and try again.','er');
+// ── Speech recognition ─────────────────────────────────────────────────────
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){
+  log('❌ SpeechRecognition not available — use Google Chrome!','er');
+  addBubble('⚠ Please open this page in Google Chrome to use voice.','er');
+  micEl.disabled=true;
+}else{
+  recog=new SR();
+  recog.lang='en-US'; recog.interimResults=true; recog.continuous=true; recog.maxAlternatives=1;
+  recog.onstart=()=>log('🎙 Mic started','ok');
+  recog.onend=()=>{ if(recording){ try{recog.start();}catch(e){} } };
+  recog.onerror=e=>{
+    if(e.error==='no-speech') return;
+    log('❌ Mic error: '+e.error,'er');
+    if(e.error==='not-allowed') addBubble('⚠ Microphone permission denied. Allow mic in Chrome and try again.','er');
     stopRec();
   };
-  recog.onresult = e => {
+  recog.onresult=e=>{
     let interim='';
-    for (let i=e.resultIndex;i<e.results.length;i++){
-      if (e.results[i].isFinal) finalTxt += e.results[i][0].transcript+' ';
-      else interim = e.results[i][0].transcript;
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) finalTxt+=e.results[i][0].transcript+' ';
+      else interim=e.results[i][0].transcript;
     }
     const disp=(finalTxt+interim).trim();
-    if (!ib) {
+    if(!ib){
       const h=document.getElementById('hint'); if(h) h.remove();
       ib=document.createElement('div'); ib.className='bub it';
       txEl.appendChild(ib);
     }
-    ib.textContent = disp||'…';
-    txEl.scrollTop = txEl.scrollHeight;
+    ib.textContent=disp||'…';
+    txEl.scrollTop=txEl.scrollHeight;
   };
 }
 
-function startRec() {
-  if (micEl.disabled) { log('Mic disabled', 'wn'); return; }
-  if (speaking) { window.speechSynthesis.cancel(); speaking=false; }
-  finalTxt=''; ib=null;
-  recording=true;
-  micEl.classList.add('rec');
-  waveEl.classList.add('on');
+function startRec(){
+  if(speaking){ window.speechSynthesis.cancel(); speaking=false; }
+  finalTxt=''; ib=null; recording=true;
+  micEl.classList.add('rec'); waveEl.classList.add('on');
   avst.textContent='Listening…';
-  log('🎙 Starting mic…', 'if');
-  try { recog.start(); } catch(e){ log('start() err: '+e.message,'er'); }
+  log('🎙 Starting mic…','if');
+  try{recog.start();}catch(e){log('start() err: '+e.message,'er');}
 }
 
-function stopRec() {
+function stopRec(){
   recording=false;
-  micEl.classList.remove('rec');
-  waveEl.classList.remove('on');
-  try { recog.stop(); } catch(e){}
+  micEl.classList.remove('rec'); waveEl.classList.remove('on');
+  try{recog.stop();}catch(e){}
   const text=finalTxt.trim();
-  if (ib) { ib.remove(); ib=null; }
-  finalTxt='';
-  if (!text) { log('⚠ Nothing captured', 'wn'); avst.textContent='Ready'; return; }
-  log('🗣 You said: ' + text, 'if');
+  if(ib){ib.remove();ib=null;} finalTxt='';
+  if(!text){log('⚠ Nothing captured','wn');avst.textContent='Ready';return;}
+  log('🗣 You said: '+text,'if');
   addBubble(text,'u');
   aiReply(text);
 }
 
-micEl.addEventListener('click', () => {
-  log('Mic clicked — recording=' + recording, 'if');
-  if (recording) stopRec(); else startRec();
+micEl.addEventListener('click',()=>{
+  if(recording) stopRec(); else startRec();
 });
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-load();
-log('── READY ───────────────────────────', 'if');
+// ── Init ───────────────────────────────────────────────────────────────────
+loadPrefs();
+log('── English Buddy ready ─────────────','if');
+log('englishbuddy.live — talk to Alex!','ok');
 </script>
 </body>
 </html>
