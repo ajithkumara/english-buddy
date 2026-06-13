@@ -1,411 +1,935 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>English Buddy — Spoken Practice</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-<style>
-  :root{--bg:#0f0f13;--surf:#1a1a22;--surf2:#22222e;--bdr:rgba(255,255,255,0.07);--acc:#7c6af7;--acc2:#a78bfa;--txt:#e8e8f0;--mut:#6b6b80;--red:#f87171;--grn:#34d399;--yel:#fbbf24}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;align-items:center}
-  body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(80px);opacity:0.1;pointer-events:none;z-index:0}
-  body::before{width:500px;height:500px;background:#7c6af7;top:-100px;left:-100px}
-  body::after{width:400px;height:400px;background:#06b6d4;bottom:-80px;right:-80px}
-  .wrap{position:relative;z-index:1;width:100%;max-width:660px;padding:24px 16px 28px;display:flex;flex-direction:column;align-items:center;gap:16px}
-  h1{font-family:'DM Serif Display',serif;font-size:1.9rem;letter-spacing:-0.02em;text-align:center}
-  h1 em{font-style:italic;color:var(--acc2)}
-  .sub{font-size:13px;color:var(--mut);text-align:center;margin-top:-10px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Buddy — Spoken Practice</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surf: #1a1a22;
+      --surf2: #22222e;
+      --bdr: rgba(255, 255, 255, 0.07);
+      --acc: #7c6af7;
+      --acc2: #a78bfa;
+      --txt: #e8e8f0;
+      --mut: #6b6b80;
+      --red: #f87171;
+      --grn: #34d399;
+      --yel: #fbbf24
+    }
 
-  /* Profile panel — name only */
-  .panel{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px}
-  .panel h3{font-size:11px;font-weight:600;color:var(--mut);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:12px}
-  .row{display:flex;gap:8px;align-items:center;margin-bottom:9px}
-  .row:last-child{margin-bottom:0}
-  .row label{font-size:12px;color:var(--mut);min-width:96px}
-  .row select,.row input[type=text]{flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none}
-  .row select:focus,.row input:focus{border-color:var(--acc)}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-  /* Topics */
-  .pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
-  .pill{font-size:12px;padding:6px 13px;border-radius:100px;border:1px solid var(--bdr);background:var(--surf);color:var(--mut);cursor:pointer;user-select:none;transition:all .15s}
-  .pill:hover{border-color:var(--acc);color:var(--acc2)}
-  .pill.on{background:rgba(124,106,247,.15);border-color:var(--acc);color:var(--acc2)}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center
+    }
 
-  /* Avatar */
-  .avbox{display:flex;flex-direction:column;align-items:center;gap:4px}
-  #av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#7c6af7,#a78bfa);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:32px;color:#fff;position:relative}
-  .ring{position:absolute;border-radius:50%;border:2px solid rgba(167,139,250,.35);display:none;animation:rexp 2s ease-out infinite}
-  .ring:nth-child(2){animation-delay:.65s}.ring:nth-child(3){animation-delay:1.3s}
-  @keyframes rexp{0%{width:84px;height:84px;opacity:.6}100%{width:155px;height:155px;opacity:0}}
-  #av.speaking .ring{display:block}
-  #avname{font-size:14px;font-weight:500}
-  #avst{font-size:12px;color:var(--mut);min-height:17px}
-  #wave{display:flex;align-items:center;gap:3px;height:28px;opacity:0;transition:opacity .3s;margin-top:4px}
-  #wave.on{opacity:1}
-  #wave span{display:block;width:4px;border-radius:2px;background:var(--acc);animation:wb .7s ease-in-out infinite alternate}
-  #wave span:nth-child(1){animation-delay:.0s;height:7px}#wave span:nth-child(2){animation-delay:.1s;height:18px}#wave span:nth-child(3){animation-delay:.2s;height:26px}#wave span:nth-child(4){animation-delay:.3s;height:13px}#wave span:nth-child(5){animation-delay:.4s;height:22px}#wave span:nth-child(6){animation-delay:.5s;height:10px}#wave span:nth-child(7){animation-delay:.6s;height:24px}#wave span:nth-child(8){animation-delay:.3s;height:16px}#wave span:nth-child(9){animation-delay:.1s;height:20px}#wave span:nth-child(10){animation-delay:.2s;height:8px}
-  @keyframes wb{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.1;
+      pointer-events: none;
+      z-index: 0
+    }
 
-  /* Transcript */
-  #tx{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:14px;min-height:120px;max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
-  #tx::-webkit-scrollbar{width:4px}#tx::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
-  .bub{max-width:86%;padding:9px 13px;border-radius:13px;font-size:14px;line-height:1.6;animation:pi .2s ease-out}
-  @keyframes pi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-  .bub.u{align-self:flex-end;background:rgba(124,106,247,.18);border:1px solid rgba(124,106,247,.25);border-bottom-right-radius:3px}
-  .bub.a{align-self:flex-start;background:var(--surf2);border:1px solid var(--bdr);border-bottom-left-radius:3px}
-  .bub.it{align-self:flex-end;background:transparent;border:1px dashed rgba(124,106,247,.3);color:var(--mut);font-style:italic;border-bottom-right-radius:3px}
-  .bub.er{align-self:stretch;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);font-size:12px;line-height:1.6}
-  #hint{color:var(--mut);font-size:13px;text-align:center;margin:auto;line-height:1.7}
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: #7c6af7;
+      top: -100px;
+      left: -100px
+    }
 
-  /* Mic */
-  #mic{width:76px;height:76px;border-radius:50%;border:2px solid var(--bdr);background:var(--surf2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-  #mic:not(:disabled):hover{border-color:var(--acc);background:rgba(124,106,247,.1)}
-  #mic.rec{border-color:var(--red);background:rgba(248,113,113,.1);animation:mg 1.2s ease-in-out infinite alternate}
-  @keyframes mg{from{box-shadow:0 0 0 0 rgba(248,113,113,.25)}to{box-shadow:0 0 0 14px rgba(248,113,113,0)}}
-  #mic:disabled{opacity:.28;cursor:not-allowed}
-  #mic svg{width:30px;height:30px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
-  #mic:not(:disabled):hover svg,#mic.rec svg{stroke:var(--red)}
-  #mhint{font-size:12px;color:var(--mut);text-align:center}
+    body::after {
+      width: 400px;
+      height: 400px;
+      background: #06b6d4;
+      bottom: -80px;
+      right: -80px
+    }
 
-  /* Voice selector */
-  .vrow{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
-  #vsel{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;outline:none;max-width:250px}
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 660px;
+      padding: 24px 16px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px
+    }
 
-  /* Debug — hidden by default in prod, toggle with button */
-  #dbg{width:100%;background:#060609;border:1px solid #1a1a2e;border-radius:12px;overflow:hidden;display:none}
-  #dbg.show{display:block}
-  #dbgbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #1a1a2e;background:#0a0a12}
-  #dbgbar span{font-size:11px;color:#5555aa;font-family:monospace}
-  #dbgbar button{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid #2a2a40;background:#111;color:#777;cursor:pointer}
-  #dlog{height:160px;overflow-y:auto;padding:8px 12px;font-size:11px;font-family:monospace;display:flex;flex-direction:column;gap:1px}
-  #dlog::-webkit-scrollbar{width:3px}#dlog::-webkit-scrollbar-thumb{background:#2a2a40;border-radius:2px}
-  .dl{color:#6666aa;padding:1px 0}.dl.ok{color:#34d399}.dl.er{color:#f87171}.dl.wn{color:#fbbf24}.dl.if{color:#a78bfa}
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+      text-align: center
+    }
 
-  /* Debug toggle link */
-  #dbgtoggle{font-size:11px;color:var(--mut);cursor:pointer;opacity:.5;text-decoration:underline;text-underline-offset:2px}
-  #dbgtoggle:hover{opacity:1}
-</style>
+    h1 em {
+      font-style: italic;
+      color: var(--acc2)
+    }
+
+    .sub {
+      font-size: 13px;
+      color: var(--mut);
+      text-align: center;
+      margin-top: -10px
+    }
+
+    /* Profile panel — name only */
+    .panel {
+      width: 100%;
+      background: var(--surf);
+      border: 1px solid var(--bdr);
+      border-radius: 14px;
+      padding: 14px 16px
+    }
+
+    .panel h3 {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mut);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 12px
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 9px
+    }
+
+    .row:last-child {
+      margin-bottom: 0
+    }
+
+    .row label {
+      font-size: 12px;
+      color: var(--mut);
+      min-width: 96px
+    }
+
+    .row select,
+    .row input[type=text] {
+      flex: 1;
+      background: var(--surf2);
+      border: 1px solid var(--bdr);
+      border-radius: 8px;
+      color: var(--txt);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none
+    }
+
+    .row select:focus,
+    .row input:focus {
+      border-color: var(--acc)
+    }
+
+    /* Topics */
+    .pills {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .pill {
+      font-size: 12px;
+      padding: 6px 13px;
+      border-radius: 100px;
+      border: 1px solid var(--bdr);
+      background: var(--surf);
+      color: var(--mut);
+      cursor: pointer;
+      user-select: none;
+      transition: all .15s
+    }
+
+    .pill:hover {
+      border-color: var(--acc);
+      color: var(--acc2)
+    }
+
+    .pill.on {
+      background: rgba(124, 106, 247, .15);
+      border-color: var(--acc);
+      color: var(--acc2)
+    }
+
+    /* Avatar */
+    .avbox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px
+    }
+
+    #av {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c6af7, #a78bfa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      color: #fff;
+      position: relative
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid rgba(167, 139, 250, .35);
+      display: none;
+      animation: rexp 2s ease-out infinite
+    }
+
+    .ring:nth-child(2) {
+      animation-delay: .65s
+    }
+
+    .ring:nth-child(3) {
+      animation-delay: 1.3s
+    }
+
+    @keyframes rexp {
+      0% {
+        width: 84px;
+        height: 84px;
+        opacity: .6
+      }
+
+      100% {
+        width: 155px;
+        height: 155px;
+        opacity: 0
+      }
+    }
+
+    #av.speaking .ring {
+      display: block
+    }
+
+    #avname {
+      font-size: 14px;
+      font-weight: 500
+    }
+
+    #avst {
+      font-size: 12px;
+      color: var(--mut);
+      min-height: 17px
+    }
+
+    #wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 28px;
+      opacity: 0;
+      transition: opacity .3s;
+      margin-top: 4px
+    }
+
+    #wave.on {
+      opacity: 1
+    }
+
+    #wave span {
+      display: block;
+      width: 4px;
+      border-radius: 2px;
+      background: var(--acc);
+      animation: wb .7s ease-in-out infinite alternate
+    }
+
+    #wave span:nth-child(1) {
+      animation-delay: .0s;
+      height: 7px
+    }
+
+    #wave span:nth-child(2) {
+      animation-delay: .1s;
+      height: 18px
+    }
+
+    #wave span:nth-child(3) {
+      animation-delay: .2s;
+      height: 26px
+    }
+
+    #wave span:nth-child(4) {
+      animation-delay: .3s;
+      height: 13px
+    }
+
+    #wave span:nth-child(5) {
+      animation-delay: .4s;
+      height: 22px
+    }
+
+    #wave span:nth-child(6) {
+      animation-delay: .5s;
+      height: 10px
+    }
+
+    #wave span:nth-child(7) {
+      animation-delay: .6s;
+      height: 24px
+    }
+
+    #wave span:nth-child(8) {
+      animation-delay: .3s;
+      height: 16px
+    }
+
+    #wave span:nth-child(9) {
+      animation-delay: .1s;
+      height: 20px
+    }
+
+    #wave span:nth-child(10) {
+      animation-delay: .2s;
+      height: 8px
+    }
+
+    @keyframes wb {
+      from {
+        transform: scaleY(.3)
+      }
+
+      to {
+        transform: scaleY(1)
+      }
+    }
+
+    /* Transcript */
+    #tx {
+      width: 100%;
+      background: var(--surf);
+      border: 1px solid var(--bdr);
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 120px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    #tx::-webkit-scrollbar {
+      width: 4px
+    }
+
+    #tx::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 2px
+    }
+
+    .bub {
+      max-width: 86%;
+      padding: 9px 13px;
+      border-radius: 13px;
+      font-size: 14px;
+      line-height: 1.6;
+      animation: pi .2s ease-out
+    }
+
+    @keyframes pi {
+      from {
+        opacity: 0;
+        transform: translateY(5px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .bub.u {
+      align-self: flex-end;
+      background: rgba(124, 106, 247, .18);
+      border: 1px solid rgba(124, 106, 247, .25);
+      border-bottom-right-radius: 3px
+    }
+
+    .bub.a {
+      align-self: flex-start;
+      background: var(--surf2);
+      border: 1px solid var(--bdr);
+      border-bottom-left-radius: 3px
+    }
+
+    .bub.it {
+      align-self: flex-end;
+      background: transparent;
+      border: 1px dashed rgba(124, 106, 247, .3);
+      color: var(--mut);
+      font-style: italic;
+      border-bottom-right-radius: 3px
+    }
+
+    .bub.er {
+      align-self: stretch;
+      background: rgba(248, 113, 113, .1);
+      border: 1px solid rgba(248, 113, 113, .3);
+      color: var(--red);
+      font-size: 12px;
+      line-height: 1.6
+    }
+
+    #hint {
+      color: var(--mut);
+      font-size: 13px;
+      text-align: center;
+      margin: auto;
+      line-height: 1.7
+    }
+
+    /* Mic */
+    #mic {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 2px solid var(--bdr);
+      background: var(--surf2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s
+    }
+
+    #mic:not(:disabled):hover {
+      border-color: var(--acc);
+      background: rgba(124, 106, 247, .1)
+    }
+
+    #mic.rec {
+      border-color: var(--red);
+      background: rgba(248, 113, 113, .1);
+      animation: mg 1.2s ease-in-out infinite alternate
+    }
+
+    @keyframes mg {
+      from {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, .25)
+      }
+
+      to {
+        box-shadow: 0 0 0 14px rgba(248, 113, 113, 0)
+      }
+    }
+
+    #mic:disabled {
+      opacity: .28;
+      cursor: not-allowed
+    }
+
+    #mic svg {
+      width: 30px;
+      height: 30px;
+      fill: none;
+      stroke: var(--mut);
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke .2s
+    }
+
+    #mic:not(:disabled):hover svg,
+    #mic.rec svg {
+      stroke: var(--red)
+    }
+
+    #mhint {
+      font-size: 12px;
+      color: var(--mut);
+      text-align: center
+    }
+
+    /* Voice selector */
+    .vrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--mut)
+    }
+
+    #vsel {
+      background: var(--surf2);
+      border: 1px solid var(--bdr);
+      border-radius: 8px;
+      color: var(--txt);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      padding: 5px 8px;
+      outline: none;
+      max-width: 250px
+    }
+
+    /* Debug — hidden by default in prod, toggle with button */
+    #dbg {
+      width: 100%;
+      background: #060609;
+      border: 1px solid #1a1a2e;
+      border-radius: 12px;
+      overflow: hidden;
+      display: none
+    }
+
+    #dbg.show {
+      display: block
+    }
+
+    #dbgbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid #1a1a2e;
+      background: #0a0a12
+    }
+
+    #dbgbar span {
+      font-size: 11px;
+      color: #5555aa;
+      font-family: monospace
+    }
+
+    #dbgbar button {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 5px;
+      border: 1px solid #2a2a40;
+      background: #111;
+      color: #777;
+      cursor: pointer
+    }
+
+    #dlog {
+      height: 160px;
+      overflow-y: auto;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      gap: 1px
+    }
+
+    #dlog::-webkit-scrollbar {
+      width: 3px
+    }
+
+    #dlog::-webkit-scrollbar-thumb {
+      background: #2a2a40;
+      border-radius: 2px
+    }
+
+    .dl {
+      color: #6666aa;
+      padding: 1px 0
+    }
+
+    .dl.ok {
+      color: #34d399
+    }
+
+    .dl.er {
+      color: #f87171
+    }
+
+    .dl.wn {
+      color: #fbbf24
+    }
+
+    .dl.if {
+      color: #a78bfa
+    }
+
+    /* Debug toggle link */
+    #dbgtoggle {
+      font-size: 11px;
+      color: var(--mut);
+      cursor: pointer;
+      opacity: .5;
+      text-decoration: underline;
+      text-underline-offset: 2px
+    }
+
+    #dbgtoggle:hover {
+      opacity: 1
+    }
+  </style>
 </head>
+
 <body>
-<div class="wrap">
+  <div class="wrap">
 
-  <h1>English <em>Buddy</em></h1>
-  <p class="sub">Your spoken English practice partner</p>
+    <h1>English <em>Buddy</em></h1>
+    <p class="sub">Your spoken English practice partner</p>
 
-  <!-- Profile — name and partner prefs only, no API key -->
-  <div class="panel">
-    <h3>Your profile</h3>
-    <div class="row">
-      <label>Your name</label>
-      <input type="text" id="uname" placeholder="e.g. Kasun" maxlength="20">
+    <!-- Profile — name and partner prefs only, no API key -->
+    <div class="panel">
+      <h3>Your profile</h3>
+      <div class="row">
+        <label>Your name</label>
+        <input type="text" id="uname" placeholder="e.g. Kasun" maxlength="20">
+      </div>
+      <div class="row">
+        <label>Partner name</label>
+        <input type="text" id="pnameinput" placeholder="e.g. Alex, Sarah" maxlength="20" value="Alex">
+        <select id="gendersel" style="max-width:100px">
+          <option value="male">♂ Male</option>
+          <option value="female">♀ Female</option>
+        </select>
+      </div>
     </div>
-    <div class="row">
-      <label>Partner name</label>
-      <input type="text" id="pnameinput" placeholder="e.g. Alex, Sarah" maxlength="20" value="Alex">
-      <select id="gendersel" style="max-width:100px">
-        <option value="male">♂ Male</option>
-        <option value="female">♀ Female</option>
-      </select>
+
+    <!-- Topics -->
+    <div class="pills">
+      <div class="pill on" data-t="free">Free chat</div>
+      <div class="pill" data-t="cricket">Cricket</div>
+      <div class="pill" data-t="food">Sri Lankan food</div>
+      <div class="pill" data-t="travel">Travel</div>
+      <div class="pill" data-t="work">Work &amp; career</div>
+      <div class="pill" data-t="tech">Technology</div>
+      <div class="pill" data-t="news">World news</div>
     </div>
-  </div>
 
-  <!-- Topics -->
-  <div class="pills">
-    <div class="pill on" data-t="free">Free chat</div>
-    <div class="pill" data-t="cricket">Cricket</div>
-    <div class="pill" data-t="food">Sri Lankan food</div>
-    <div class="pill" data-t="travel">Travel</div>
-    <div class="pill" data-t="work">Work &amp; career</div>
-    <div class="pill" data-t="tech">Technology</div>
-    <div class="pill" data-t="news">World news</div>
-  </div>
-
-  <!-- Avatar -->
-  <div class="avbox">
-    <div id="av" class="idle">
-      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-      <span id="avltr">A</span>
+    <!-- Avatar -->
+    <div class="avbox">
+      <div id="av" class="idle">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <span id="avltr">A</span>
+      </div>
+      <div id="avname">Alex</div>
+      <div id="avst">Press the mic and start talking</div>
+      <div id="wave">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
     </div>
-    <div id="avname">Alex</div>
-    <div id="avst">Press the mic and start talking</div>
-    <div id="wave">
-      <span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span>
+
+    <!-- Transcript -->
+    <div id="tx">
+      <div id="hint">Press the mic and start talking.<br>Alex will reply out loud.</div>
     </div>
-  </div>
 
-  <!-- Transcript -->
-  <div id="tx">
-    <div id="hint">Press the mic and start talking.<br>Alex will reply out loud.</div>
-  </div>
+    <!-- Mic — enabled immediately, no API key needed from user -->
+    <button id="mic">
+      <svg viewBox="0 0 24 24">
+        <rect x="9" y="2" width="6" height="12" rx="3" />
+        <path d="M5 10a7 7 0 0 0 14 0" />
+        <line x1="12" y1="19" x2="12" y2="22" />
+        <line x1="8" y1="22" x2="16" y2="22" />
+      </svg>
+    </button>
+    <div id="mhint">Tap to speak · tap again when done</div>
 
-  <!-- Mic — enabled immediately, no API key needed from user -->
-  <button id="mic">
-    <svg viewBox="0 0 24 24">
-      <rect x="9" y="2" width="6" height="12" rx="3"/>
-      <path d="M5 10a7 7 0 0 0 14 0"/>
-      <line x1="12" y1="19" x2="12" y2="22"/>
-      <line x1="8" y1="22" x2="16" y2="22"/>
-    </svg>
-  </button>
-  <div id="mhint">Tap to speak · tap again when done</div>
-
-  <!-- Voice selector -->
-  <div class="vrow">
-    <label for="vsel">Voice:</label>
-    <select id="vsel"></select>
-  </div>
-
-  <!-- Debug toggle — hidden link, useful when troubleshooting -->
-  <span id="dbgtoggle" onclick="toggleDbg()">debug</span>
-  <div id="dbg">
-    <div id="dbgbar">
-      <span>🔍 Debug Log</span>
-      <button onclick="document.getElementById('dlog').innerHTML=''">Clear</button>
+    <!-- Voice selector -->
+    <div class="vrow">
+      <label for="vsel">Voice:</label>
+      <select id="vsel"></select>
     </div>
-    <div id="dlog"></div>
+
+    <!-- Debug toggle — hidden link, useful when troubleshooting -->
+    <span id="dbgtoggle" onclick="toggleDbg()">debug</span>
+    <div id="dbg">
+      <div id="dbgbar">
+        <span>🔍 Debug Log</span>
+        <button onclick="document.getElementById('dlog').innerHTML=''">Clear</button>
+      </div>
+      <div id="dlog"></div>
+    </div>
+
   </div>
+  <script>
+    // ── Prompts ────────────────────────────────────────────────────────────────
+    const TOPICS = {
+      free: 'You are {P}, a warm friendly funny English conversation partner chatting with {U}. React genuinely, ask one follow-up question. Reply in 1-3 short spoken sentences ONLY. No lists, no markdown.',
+      cricket: 'You are {P}, a passionate cricket fan talking with {U}. Talk about cricket — teams, matches, players, World Cups. Ask one question back. 1-3 short sentences, casual.',
+      food: 'You are {P}, someone who loves Sri Lankan food, chatting with {U}. Discuss kottu, hoppers, rice and curry, street food. 1-3 warm spoken sentences.',
+      travel: 'You are {P}, a curious traveller chatting with {U}. Talk about travel in Sri Lanka and abroad. 1-3 casual sentences, ask one question.',
+      work: 'You are {P}, a supportive friend chatting with {U} about work and careers. Encouraging tone. 1-3 conversational sentences.',
+      tech: 'You are {P}, a tech enthusiast chatting with {U}. Discuss AI, apps, smartphones, coding. 1-3 spoken sentences.',
+      news: 'You are {P}, a thoughtful friend discussing world news with {U}. Balanced, curious. Ask opinions. 1-3 casual sentences.'
+    };
 
-</div>
-<script>
-// ── Prompts ────────────────────────────────────────────────────────────────
-const TOPICS = {
-  free:    'You are {P}, a warm friendly funny English conversation partner chatting with {U}. React genuinely, ask one follow-up question. Reply in 1-3 short spoken sentences ONLY. No lists, no markdown.',
-  cricket: 'You are {P}, a passionate cricket fan talking with {U}. Talk about cricket — teams, matches, players, World Cups. Ask one question back. 1-3 short sentences, casual.',
-  food:    'You are {P}, someone who loves Sri Lankan food, chatting with {U}. Discuss kottu, hoppers, rice and curry, street food. 1-3 warm spoken sentences.',
-  travel:  'You are {P}, a curious traveller chatting with {U}. Talk about travel in Sri Lanka and abroad. 1-3 casual sentences, ask one question.',
-  work:    'You are {P}, a supportive friend chatting with {U} about work and careers. Encouraging tone. 1-3 conversational sentences.',
-  tech:    'You are {P}, a tech enthusiast chatting with {U}. Discuss AI, apps, smartphones, coding. 1-3 spoken sentences.',
-  news:    'You are {P}, a thoughtful friend discussing world news with {U}. Balanced, curious. Ask opinions. 1-3 casual sentences.'
-};
+    // ── State ──────────────────────────────────────────────────────────────────
+    let topic = 'free', history = [], recording = false, speaking = false;
+    let finalTxt = '', ib = null, recog = null, voices = [];
+    const $ = id => document.getElementById(id);
 
-// ── State ──────────────────────────────────────────────────────────────────
-let topic='free', history=[], recording=false, speaking=false;
-let finalTxt='', ib=null, recog=null, voices=[];
-const $=id=>document.getElementById(id);
+    // ── DOM refs ───────────────────────────────────────────────────────────────
+    const avEl = $('av'), avst = $('avst'), avltr = $('avltr'), avnameEl = $('avname');
+    const waveEl = $('wave'), txEl = $('tx'), micEl = $('mic'), mhint = $('mhint');
+    const vsel = $('vsel'), dlog = $('dlog');
+    const unameEl = $('uname'), pnameEl = $('pnameinput'), genderEl = $('gendersel');
 
-// ── DOM refs ───────────────────────────────────────────────────────────────
-const avEl=$('av'), avst=$('avst'), avltr=$('avltr'), avnameEl=$('avname');
-const waveEl=$('wave'), txEl=$('tx'), micEl=$('mic'), mhint=$('mhint');
-const vsel=$('vsel'), dlog=$('dlog');
-const unameEl=$('uname'), pnameEl=$('pnameinput'), genderEl=$('gendersel');
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function pname() { return pnameEl.value.trim() || 'Alex'; }
+    function uname() { return unameEl.value.trim() || 'friend'; }
+    function tpl(s) { return s.replace(/{P}/g, pname()).replace(/{U}/g, uname()); }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-function pname(){ return pnameEl.value.trim() || 'Alex'; }
-function uname(){ return unameEl.value.trim() || 'friend'; }
-function tpl(s){ return s.replace(/{P}/g,pname()).replace(/{U}/g,uname()); }
+    function log(msg, cls = '') {
+      const d = document.createElement('div');
+      d.className = 'dl ' + cls;
+      d.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+      dlog.appendChild(d); dlog.scrollTop = dlog.scrollHeight;
+      console.log('[EB]', msg);
+    }
 
-function log(msg,cls=''){
-  const d=document.createElement('div');
-  d.className='dl '+cls;
-  d.textContent=new Date().toLocaleTimeString()+' '+msg;
-  dlog.appendChild(d); dlog.scrollTop=dlog.scrollHeight;
-  console.log('[EB]',msg);
-}
+    function toggleDbg() {
+      $('dbg').classList.toggle('show');
+    }
 
-function toggleDbg(){
-  $('dbg').classList.toggle('show');
-}
+    // ── Persist user prefs (name only — no API keys) ──────────────────────────
+    function loadPrefs() {
+      unameEl.value = localStorage.getItem('eb_un') || '';
+      pnameEl.value = localStorage.getItem('eb_pn') || 'Alex';
+      genderEl.value = localStorage.getItem('eb_gd') || 'female';
+      avltr.textContent = pname().charAt(0).toUpperCase();
+      avnameEl.textContent = pname();
+    }
+    function savePrefs() {
+      localStorage.setItem('eb_un', unameEl.value.trim());
+      localStorage.setItem('eb_pn', pnameEl.value.trim());
+      localStorage.setItem('eb_gd', genderEl.value);
+      avltr.textContent = pname().charAt(0).toUpperCase();
+      avnameEl.textContent = pname();
+      pickVoiceForGender(genderEl.value);
+    }
+    // Auto-save prefs on any change
+    [unameEl, pnameEl, genderEl].forEach(el => el.addEventListener('change', savePrefs));
 
-// ── Persist user prefs (name only — no API keys) ──────────────────────────
-function loadPrefs(){
-  unameEl.value       = localStorage.getItem('eb_un')  || '';
-  pnameEl.value       = localStorage.getItem('eb_pn')  || 'Alex';
-  genderEl.value      = localStorage.getItem('eb_gd')  || 'female';
-  avltr.textContent   = pname().charAt(0).toUpperCase();
-  avnameEl.textContent= pname();
-}
-function savePrefs(){
-  localStorage.setItem('eb_un', unameEl.value.trim());
-  localStorage.setItem('eb_pn', pnameEl.value.trim());
-  localStorage.setItem('eb_gd', genderEl.value);
-  avltr.textContent   = pname().charAt(0).toUpperCase();
-  avnameEl.textContent= pname();
-  pickVoiceForGender(genderEl.value);
-}
-// Auto-save prefs on any change
-[unameEl, pnameEl, genderEl].forEach(el => el.addEventListener('change', savePrefs));
-
-// ── Topics ─────────────────────────────────────────────────────────────────
-document.querySelectorAll('.pill').forEach(p=>{
-  p.addEventListener('click',()=>{
-    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
-    p.classList.add('on'); topic=p.dataset.t;
-    history=[];
-    speaking=false; window.speechSynthesis.cancel();
-    avEl.className='idle';
-    txEl.innerHTML='<div id="hint" style="color:var(--mut);font-size:13px;text-align:center;margin:auto;line-height:1.7">Topic changed. Press mic to start.</div>';
-    avst.textContent='Ready to chat';
-    log('Topic: '+topic,'if');
-  });
-});
-
-// ── Voices ─────────────────────────────────────────────────────────────────
-function fillVoices(){
-  const en=window.speechSynthesis.getVoices().filter(v=>v.lang.startsWith('en'));
-  if(!en.length) return;
-  voices=en.sort((a,b)=>{
-    const s=v=>v.name.includes('Google')?0:v.name.match(/Samantha|Karen|Zira|David/)?1:2;
-    return s(a)-s(b);
-  });
-  vsel.innerHTML='';
-  voices.forEach((v,i)=>{
-    const o=document.createElement('option');
-    o.value=i; o.textContent=v.name+(v.localService?'':' ☁');
-    vsel.appendChild(o);
-  });
-  pickVoiceForGender(genderEl.value);
-  log('✓ Voices: '+voices.length+' — using: '+voices[vsel.value]?.name,'ok');
-}
-window.speechSynthesis.onvoiceschanged=fillVoices;
-fillVoices();
-setTimeout(fillVoices,800);
-
-function pickVoiceForGender(g){
-  if(!voices.length) return;
-  const male  =['david','mark','james','ryan','guy','george','richard','daniel','arthur','oliver'];
-  const female=['zira','samantha','karen','susan','linda','aria','jenny','natasha','female'];
-  const kw = g==='male' ? male : female;
-  const idx = voices.findIndex(v=>kw.some(k=>v.name.toLowerCase().includes(k)));
-  if(idx>=0){ vsel.value=idx; return; }
-  const google=voices.findIndex(v=>v.name.toLowerCase().includes('google'));
-  if(google>=0) vsel.value=google;
-}
-function getVoice(){ return voices[parseInt(vsel.value)]||voices[0]||null; }
-
-// ── TTS ────────────────────────────────────────────────────────────────────
-function speak(text){
-  return new Promise(resolve=>{
-    window.speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    u.voice=getVoice(); u.rate=0.93; u.pitch=1.05; u.volume=1;
-    speaking=true; avEl.className='speaking';
-    avst.textContent='Speaking…';
-    log('🔊 '+text.slice(0,70)+(text.length>70?'…':''),'if');
-    u.onend=()=>{ speaking=false; avEl.className='idle'; avst.textContent='Your turn'; log('✓ Done speaking','ok'); resolve(); };
-    u.onerror=e=>{ log('❌ TTS: '+e.error,'er'); speaking=false; avEl.className='idle'; resolve(); };
-    window.speechSynthesis.speak(u);
-  });
-}
-
-// ── AI call — no API key in browser, server handles it ─────────────────────
-async function aiReply(userText){
-  avst.textContent='Thinking…'; avEl.className='idle';
-  history.push({role:'user',content:userText});
-  const sys=tpl(TOPICS[topic]);
-  log('→ Calling AI…','if');
-
-  try{
-    // POST to /proxy — server.py injects the API key server-side
-    const r=await fetch('/proxy',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        url:'https://api.anthropic.com/v1/messages',
-        headers:{
-          'Content-Type':'application/json',
-          'anthropic-version':'2023-06-01'
-          // x-api-key is injected by server.py — never in the browser
-        },
-        body:{
-          model:'claude-sonnet-4-5',
-          max_tokens:200,
-          system:sys,
-          messages:history
-        }
-      })
+    // ── Topics ─────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.pill').forEach(p => {
+      p.addEventListener('click', () => {
+        document.querySelectorAll('.pill').forEach(x => x.classList.remove('on'));
+        p.classList.add('on'); topic = p.dataset.t;
+        history = [];
+        speaking = false; window.speechSynthesis.cancel();
+        avEl.className = 'idle';
+        txEl.innerHTML = '<div id="hint" style="color:var(--mut);font-size:13px;text-align:center;margin:auto;line-height:1.7">Topic changed. Press mic to start.</div>';
+        avst.textContent = 'Ready to chat';
+        log('Topic: ' + topic, 'if');
+      });
     });
 
-    if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+': '+t.slice(0,200)); }
-    const d=await r.json();
-    log('✓ Response: '+JSON.stringify(d).slice(0,120),'ok');
-    if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
-
-    let reply=(d.content?.[0]?.text||'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[-•]\s/gm,'').trim();
-    if(!reply) reply='Sorry, I missed that. Can you say it again?';
-
-    history.push({role:'assistant',content:reply});
-    addBubble(reply,'a');
-    await speak(reply);
-
-  }catch(e){
-    log('❌ ERROR: '+e.message,'er');
-    addBubble('⚠ '+e.message,'er');
-    avst.textContent='Error'; avEl.className='idle';
-  }
-}
-
-function addBubble(text,cls){
-  const h=document.getElementById('hint'); if(h) h.remove();
-  const d=document.createElement('div');
-  d.className='bub '+cls; d.textContent=text;
-  txEl.appendChild(d); txEl.scrollTop=txEl.scrollHeight;
-}
-
-// ── Speech recognition ─────────────────────────────────────────────────────
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SR){
-  log('❌ SpeechRecognition not available — use Google Chrome!','er');
-  addBubble('⚠ Please open this page in Google Chrome to use voice.','er');
-  micEl.disabled=true;
-}else{
-  recog=new SR();
-  recog.lang='en-US'; recog.interimResults=true; recog.continuous=true; recog.maxAlternatives=1;
-  recog.onstart=()=>log('🎙 Mic started','ok');
-  recog.onend=()=>{ if(recording){ try{recog.start();}catch(e){} } };
-  recog.onerror=e=>{
-    if(e.error==='no-speech') return;
-    log('❌ Mic error: '+e.error,'er');
-    if(e.error==='not-allowed') addBubble('⚠ Microphone permission denied. Allow mic in Chrome and try again.','er');
-    stopRec();
-  };
-  recog.onresult=e=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) finalTxt+=e.results[i][0].transcript+' ';
-      else interim=e.results[i][0].transcript;
+    // ── Voices ─────────────────────────────────────────────────────────────────
+    function fillVoices() {
+      const en = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+      if (!en.length) return;
+      voices = en.sort((a, b) => {
+        const s = v => v.name.includes('Google') ? 0 : v.name.match(/Samantha|Karen|Zira|David/) ? 1 : 2;
+        return s(a) - s(b);
+      });
+      vsel.innerHTML = '';
+      voices.forEach((v, i) => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = v.name + (v.localService ? '' : ' ☁');
+        vsel.appendChild(o);
+      });
+      pickVoiceForGender(genderEl.value);
+      log('✓ Voices: ' + voices.length + ' — using: ' + voices[vsel.value]?.name, 'ok');
     }
-    const disp=(finalTxt+interim).trim();
-    if(!ib){
-      const h=document.getElementById('hint'); if(h) h.remove();
-      ib=document.createElement('div'); ib.className='bub it';
-      txEl.appendChild(ib);
+    window.speechSynthesis.onvoiceschanged = fillVoices;
+    fillVoices();
+    setTimeout(fillVoices, 800);
+
+    function pickVoiceForGender(g) {
+      if (!voices.length) return;
+      const male = ['david', 'mark', 'james', 'ryan', 'guy', 'george'];
+      const female = ['zira', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny'];
+      const kw = g === 'male' ? male : female;
+
+      // Priority 1: Google US English
+      const googleUS = voices.findIndex(v =>
+        v.name.toLowerCase().includes('google') && v.lang === 'en-US');
+      if (googleUS >= 0) { vsel.value = googleUS; return; }
+
+      // Priority 2: Any US English matching gender
+      const usGen = voices.findIndex(v =>
+        v.lang === 'en-US' && kw.some(k => v.name.toLowerCase().includes(k)));
+      if (usGen >= 0) { vsel.value = usGen; return; }
+
+      // Priority 3: Any US English
+      const usAny = voices.findIndex(v => v.lang === 'en-US');
+      if (usAny >= 0) { vsel.value = usAny; return; }
+
+      // Fallback: any Google voice
+      const google = voices.findIndex(v => v.name.toLowerCase().includes('google'));
+      if (google >= 0) vsel.value = google;
     }
-    ib.textContent=disp||'…';
-    txEl.scrollTop=txEl.scrollHeight;
-  };
-}
+    function getVoice() { return voices[parseInt(vsel.value)] || voices[0] || null; }
 
-function startRec(){
-  if(speaking){ window.speechSynthesis.cancel(); speaking=false; }
-  finalTxt=''; ib=null; recording=true;
-  micEl.classList.add('rec'); waveEl.classList.add('on');
-  avst.textContent='Listening…';
-  log('🎙 Starting mic…','if');
-  try{recog.start();}catch(e){log('start() err: '+e.message,'er');}
-}
+    // ── TTS ────────────────────────────────────────────────────────────────────
+    function speak(text) {
+      return new Promise(resolve => {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = getVoice(); u.rate = 0.93; u.pitch = 1.05; u.volume = 1;
+        speaking = true; avEl.className = 'speaking';
+        avst.textContent = 'Speaking…';
+        log('🔊 ' + text.slice(0, 70) + (text.length > 70 ? '…' : ''), 'if');
+        u.onend = () => { speaking = false; avEl.className = 'idle'; avst.textContent = 'Your turn'; log('✓ Done speaking', 'ok'); resolve(); };
+        u.onerror = e => { log('❌ TTS: ' + e.error, 'er'); speaking = false; avEl.className = 'idle'; resolve(); };
+        window.speechSynthesis.speak(u);
+      });
+    }
 
-function stopRec(){
-  recording=false;
-  micEl.classList.remove('rec'); waveEl.classList.remove('on');
-  try{recog.stop();}catch(e){}
-  const text=finalTxt.trim();
-  if(ib){ib.remove();ib=null;} finalTxt='';
-  if(!text){log('⚠ Nothing captured','wn');avst.textContent='Ready';return;}
-  log('🗣 You said: '+text,'if');
-  addBubble(text,'u');
-  aiReply(text);
-}
+    // ── AI call — no API key in browser, server handles it ─────────────────────
+    async function aiReply(userText) {
+      avst.textContent = 'Thinking…'; avEl.className = 'idle';
+      history.push({ role: 'user', content: userText });
+      const sys = tpl(TOPICS[topic]);
+      log('→ Calling AI…', 'if');
 
-micEl.addEventListener('click',()=>{
-  if(recording) stopRec(); else startRec();
-});
+      try {
+        // POST to /proxy — server.py injects the API key server-side
+        const r = await fetch('/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: 'https://api.anthropic.com/v1/messages',
+            headers: {
+              'Content-Type': 'application/json',
+              'anthropic-version': '2023-06-01'
+              // x-api-key is injected by server.py — never in the browser
+            },
+            body: {
+              model: 'claude-sonnet-4-5',
+              max_tokens: 200,
+              system: sys,
+              messages: history
+            }
+          })
+        });
 
-// ── Init ───────────────────────────────────────────────────────────────────
-loadPrefs();
-log('── English Buddy ready ─────────────','if');
-log('englishbuddy.live — talk to Alex!','ok');
-</script>
+        if (!r.ok) { const t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 200)); }
+        const d = await r.json();
+        log('✓ Response: ' + JSON.stringify(d).slice(0, 120), 'ok');
+        if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+
+        let reply = (d.content?.[0]?.text || '').replace(/\*\*/g, '').replace(/\*/g, '').replace(/^[-•]\s/gm, '').trim();
+        if (!reply) reply = 'Sorry, I missed that. Can you say it again?';
+
+        history.push({ role: 'assistant', content: reply });
+        addBubble(reply, 'a');
+        await speak(reply);
+
+      } catch (e) {
+        log('❌ ERROR: ' + e.message, 'er');
+        addBubble('⚠ ' + e.message, 'er');
+        avst.textContent = 'Error'; avEl.className = 'idle';
+      }
+    }
+
+    function addBubble(text, cls) {
+      const h = document.getElementById('hint'); if (h) h.remove();
+      const d = document.createElement('div');
+      d.className = 'bub ' + cls; d.textContent = text;
+      txEl.appendChild(d); txEl.scrollTop = txEl.scrollHeight;
+    }
+
+    // ── Speech recognition ─────────────────────────────────────────────────────
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      log('❌ SpeechRecognition not available — use Google Chrome!', 'er');
+      addBubble('⚠ Please open this page in Google Chrome to use voice.', 'er');
+      micEl.disabled = true;
+    } else {
+      recog = new SR();
+      recog.lang = 'en-US'; recog.interimResults = true; recog.continuous = true; recog.maxAlternatives = 1;
+      recog.onstart = () => log('🎙 Mic started', 'ok');
+      recog.onend = () => { if (recording) { try { recog.start(); } catch (e) { } } };
+      recog.onerror = e => {
+        if (e.error === 'no-speech') return;
+        log('❌ Mic error: ' + e.error, 'er');
+        if (e.error === 'not-allowed') addBubble('⚠ Microphone permission denied. Allow mic in Chrome and try again.', 'er');
+        stopRec();
+      };
+      recog.onresult = e => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) finalTxt += e.results[i][0].transcript + ' ';
+          else interim = e.results[i][0].transcript;
+        }
+        const disp = (finalTxt + interim).trim();
+        if (!ib) {
+          const h = document.getElementById('hint'); if (h) h.remove();
+          ib = document.createElement('div'); ib.className = 'bub it';
+          txEl.appendChild(ib);
+        }
+        ib.textContent = disp || '…';
+        txEl.scrollTop = txEl.scrollHeight;
+      };
+    }
+
+    function startRec() {
+      if (speaking) { window.speechSynthesis.cancel(); speaking = false; }
+      finalTxt = ''; ib = null; recording = true;
+      micEl.classList.add('rec'); waveEl.classList.add('on');
+      avst.textContent = 'Listening…';
+      log('🎙 Starting mic…', 'if');
+      try { recog.start(); } catch (e) { log('start() err: ' + e.message, 'er'); }
+    }
+
+    function stopRec() {
+      recording = false;
+      micEl.classList.remove('rec'); waveEl.classList.remove('on');
+      try { recog.stop(); } catch (e) { }
+      const text = finalTxt.trim();
+      if (ib) { ib.remove(); ib = null; } finalTxt = '';
+      if (!text) { log('⚠ Nothing captured', 'wn'); avst.textContent = 'Ready'; return; }
+      log('🗣 You said: ' + text, 'if');
+      addBubble(text, 'u');
+      aiReply(text);
+    }
+
+    micEl.addEventListener('click', () => {
+      if (recording) stopRec(); else startRec();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    loadPrefs();
+    log('── English Buddy ready ─────────────', 'if');
+    log('englishbuddy.live — talk to Alex!', 'ok');
+  </script>
 </body>
+
 </html>
