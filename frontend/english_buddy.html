@@ -671,7 +671,8 @@
     </div>
 
     <!-- Debug toggle — hidden link, useful when troubleshooting -->
-    <button id="dbgtoggle" onclick="document.getElementById('dbg').classList.toggle('show'); this.textContent=document.getElementById('dbg').classList.contains('show')?'hide debug':'debug'">debug</button>
+    <button id="dbgtoggle"
+      onclick="document.getElementById('dbg').classList.toggle('show'); this.textContent=document.getElementById('dbg').classList.contains('show')?'hide debug':'debug'">debug</button>
     <div id="dbg">
       <div id="dbgbar">
         <span>🔍 Debug Log</span>
@@ -683,12 +684,12 @@
   </div>
   <script>
     // ── Platform detection ─────────────────────────────────────────────────────
-    const IS_IOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const IS_ANDROID = /Android/.test(navigator.userAgent);
-    const IS_CHROME  = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
-    const IS_SAFARI  = /Safari/.test(navigator.userAgent) && !IS_CHROME;
-    const IS_MOBILE  = IS_IOS || IS_ANDROID;
-    const SILENCE_DELAY = 2200; // ms of silence before iOS auto-submits
+    const IS_CHROME = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+    const IS_SAFARI = /Safari/.test(navigator.userAgent) && !IS_CHROME;
+    const IS_MOBILE = IS_IOS || IS_ANDROID;
+    const SILENCE_DELAY = 1500; // ms of silence before iOS auto-submits (1.5s feels natural)
 
     // Show iOS warning banner if on iPhone/iPad
     if (IS_IOS) {
@@ -778,10 +779,10 @@
 
     // ── Voices ─────────────────────────────────────────────────────────────────
     const EXCLUDED_VOICES = [
-      'grandma','grandpa','junior','whisper','bahh','bells','boing',
-      'bubbles','cellos','deranged','good news','hysterical','pipe organ',
-      'trinoids','zarvox','albert','bad news','jester','kathy','ralph',
-      'superstar','fred','bruce','organ'
+      'grandma', 'grandpa', 'junior', 'whisper', 'bahh', 'bells', 'boing',
+      'bubbles', 'cellos', 'deranged', 'good news', 'hysterical', 'pipe organ',
+      'trinoids', 'zarvox', 'albert', 'bad news', 'jester', 'kathy', 'ralph',
+      'superstar', 'fred', 'bruce', 'organ'
     ];
 
     function fillVoices() {
@@ -833,7 +834,7 @@
 
     function pickVoiceForGender(g) {
       if (!voices.length) return;
-      const maleKw   = ['david', 'mark', 'james', 'ryan', 'guy', 'george', 'richard', 'daniel', 'arthur', 'oliver', 'thomas'];
+      const maleKw = ['david', 'mark', 'james', 'ryan', 'guy', 'george', 'richard', 'daniel', 'arthur', 'oliver', 'thomas'];
       const femaleKw = ['zira', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny', 'natasha', 'moira', 'fiona', 'kate', 'victoria'];
       const kw = g === 'male' ? maleKw : femaleKw;
 
@@ -874,7 +875,7 @@
         setTimeout(() => {
           const u = new SpeechSynthesisUtterance(text);
           u.voice = getVoice();
-          u.rate  = IS_IOS ? 0.88 : 0.93; // Slightly slower on iOS
+          u.rate = IS_IOS ? 0.88 : 0.93; // Slightly slower on iOS
           u.pitch = 1.05; u.volume = 1;
           speaking = true; avEl.className = 'speaking';
           avst.textContent = 'Speaking…';
@@ -913,11 +914,20 @@
       clearSilenceTimer();
       silenceStart = Date.now();
       silenceTimer = setTimeout(() => {
-        const text = (finalTxt + interimTxt).trim();
-        log('⏱ iOS auto-submit after silence: ' + text, 'wn');
+        // Grab everything — final + interim + whatever is in the bubble
+        let text = (finalTxt + interimTxt).trim();
+        // Last resort: read text directly from the interim bubble if still empty
+        if (!text && ib) text = (ib.textContent || '').trim();
+        log('⏱ iOS silence fired — finalTxt="' + finalTxt.trim() + '" interimTxt="' + interimTxt.trim() + '"', 'wn');
+        log('⏱ Combined text: "' + text + '"', 'wn');
         if (recording && text) {
-          finalTxt = text; // promote interim to final
+          finalTxt = text;
+          interimTxt = '';
           stopRec();
+        } else if (recording) {
+          log('⏱ Nothing to submit — restarting mic', 'wn');
+          try { recog.stop(); } catch (e) { }
+          setTimeout(() => { try { recog.start(); } catch (e) { } }, 300);
         }
       }, SILENCE_DELAY);
     }
@@ -1000,16 +1010,22 @@
       recog.onstart = () => log('🎙 Mic started' + (IS_IOS ? ' (iOS mode)' : ''), 'ok');
 
       recog.onend = () => {
-        log('Mic ended (recording=' + recording + ')', '');
+        log('Mic ended — finalTxt="' + finalTxt.trim() + '" interim="' + interimTxt.trim() + '"', '');
         if (recording) {
           if (IS_IOS) {
-            // iOS stops after each utterance — check if we have text to submit
-            const combinedText = (finalTxt + interimTxt).trim();
-            if (combinedText && !silenceTimer) {
+            // Grab everything available
+            let combinedText = (finalTxt + interimTxt).trim();
+            if (!combinedText && ib) combinedText = (ib.textContent || '').trim();
+
+            if (combinedText) {
+              log('iOS onend: submitting "' + combinedText + '"', 'ok');
               finalTxt = combinedText;
+              interimTxt = '';
               stopRec();
             } else {
-              try { recog.start(); log('iOS: restarted mic', 'wn'); }
+              // Nothing yet — restart mic and keep listening
+              log('iOS onend: nothing captured, restarting', 'wn');
+              try { recog.start(); }
               catch (e) { log('iOS restart err: ' + e.message, 'er'); }
             }
           } else {
@@ -1033,10 +1049,23 @@
         let interim = '';
         let newFinal = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) newFinal += e.results[i][0].transcript + ' ';
-          else interim = e.results[i][0].transcript;
+          if (e.results[i].isFinal) {
+            newFinal += e.results[i][0].transcript + ' ';
+          } else {
+            // On iOS, confidence > 0.7 is reliable enough to treat as final
+            const conf = e.results[i][0].confidence;
+            if (IS_IOS && conf > 0.7) {
+              newFinal += e.results[i][0].transcript + ' ';
+              log('iOS: high-confidence interim promoted to final (conf=' + conf.toFixed(2) + ')', 'ok');
+            } else {
+              interim = e.results[i][0].transcript;
+            }
+          }
         }
-        if (newFinal) finalTxt += newFinal;
+        if (newFinal) {
+          finalTxt += newFinal;
+          log('iOS: finalTxt now: "' + finalTxt.trim() + '"', 'if');
+        }
         interimTxt = interim;
 
         const disp = (finalTxt + interim).trim();
@@ -1048,7 +1077,7 @@
         ib.textContent = disp || '…';
         txEl.scrollTop = txEl.scrollHeight;
 
-        // iOS: restart silence timer on every new speech
+        // iOS: restart silence timer on every new speech input
         if (IS_IOS) startSilenceTimer();
       };
     }
@@ -1092,7 +1121,7 @@
     loadPrefs();
     log('── English Buddy ─────────────────────────', 'if');
     log('Platform: ' + (IS_IOS ? 'iOS' : IS_ANDROID ? 'Android' : 'Desktop') +
-        ' | Browser: ' + (IS_CHROME ? 'Chrome' : IS_SAFARI ? 'Safari' : 'Other'), 'if');
+      ' | Browser: ' + (IS_CHROME ? 'Chrome' : IS_SAFARI ? 'Safari' : 'Other'), 'if');
     log('SpeechRecognition: ' + (SR ? '✓ Available' : '✗ Not available'), SR ? 'ok' : 'er');
     log('englishbuddy.live — talk to Alex!', 'ok');
   </script>
