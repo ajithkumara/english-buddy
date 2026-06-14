@@ -585,7 +585,11 @@
       cursor: pointer;
       opacity: .5;
       text-decoration: underline;
-      text-underline-offset: 2px
+      text-underline-offset: 2px;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit
     }
 
     #dbgtoggle:hover {
@@ -667,7 +671,7 @@
     </div>
 
     <!-- Debug toggle — hidden link, useful when troubleshooting -->
-    <span id="dbgtoggle" onclick="toggleDbg()">debug</span>
+    <button id="dbgtoggle" onclick="document.getElementById('dbg').classList.toggle('show'); this.textContent=document.getElementById('dbg').classList.contains('show')?'hide debug':'debug'">debug</button>
     <div id="dbg">
       <div id="dbgbar">
         <span>🔍 Debug Log</span>
@@ -678,6 +682,27 @@
 
   </div>
   <script>
+    // ── Platform detection ─────────────────────────────────────────────────────
+    const IS_IOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const IS_ANDROID = /Android/.test(navigator.userAgent);
+    const IS_CHROME  = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+    const IS_SAFARI  = /Safari/.test(navigator.userAgent) && !IS_CHROME;
+    const IS_MOBILE  = IS_IOS || IS_ANDROID;
+    const SILENCE_DELAY = 2200; // ms of silence before iOS auto-submits
+
+    // Show iOS warning banner if on iPhone/iPad
+    if (IS_IOS) {
+      const w = document.createElement('div');
+      w.style.cssText = 'width:100%;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);border-radius:12px;padding:12px 16px;font-size:13px;color:#fbbf24;text-align:center;line-height:1.6;margin-bottom:4px';
+      w.innerHTML = '📱 You are on iOS — speak clearly and <strong>pause for 2 seconds</strong> to send.<br>For best experience use <strong>Chrome on Android or desktop</strong>.';
+      document.querySelector('.wrap').insertBefore(w, document.querySelector('.wrap').children[2]);
+    } else if (!IS_CHROME) {
+      const w = document.createElement('div');
+      w.style.cssText = 'width:100%;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.4);border-radius:12px;padding:12px 16px;font-size:13px;color:#f87171;text-align:center;line-height:1.6;margin-bottom:4px';
+      w.innerHTML = '⚠ Voice recognition works best in <strong>Google Chrome</strong>. Please switch to Chrome for the full experience.';
+      document.querySelector('.wrap').insertBefore(w, document.querySelector('.wrap').children[2]);
+    }
+
     // ── Prompts ────────────────────────────────────────────────────────────────
     const TOPICS = {
       free: 'You are {P}, a warm friendly funny English conversation partner chatting with {U}. React genuinely, ask one follow-up question. Reply in 1-3 short spoken sentences ONLY. No lists, no markdown.',
@@ -691,7 +716,8 @@
 
     // ── State ──────────────────────────────────────────────────────────────────
     let topic = 'free', history = [], recording = false, speaking = false;
-    let finalTxt = '', ib = null, recog = null, voices = [];
+    let finalTxt = '', interimTxt = '', ib = null, recog = null, voices = [];
+    let silenceTimer = null, silenceAnimFrame = null, silenceStart = null;
     const $ = id => document.getElementById(id);
 
     // ── DOM refs ───────────────────────────────────────────────────────────────
@@ -751,12 +777,42 @@
     });
 
     // ── Voices ─────────────────────────────────────────────────────────────────
+    const EXCLUDED_VOICES = [
+      'grandma','grandpa','junior','whisper','bahh','bells','boing',
+      'bubbles','cellos','deranged','good news','hysterical','pipe organ',
+      'trinoids','zarvox','albert','bad news','jester','kathy','ralph',
+      'superstar','fred','bruce','organ'
+    ];
+
     function fillVoices() {
-      const en = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
-      if (!en.length) return;
-      voices = en.sort((a, b) => {
-        const s = v => v.name.includes('Google') ? 0 : v.name.match(/Samantha|Karen|Zira|David/) ? 1 : 2;
-        return s(a) - s(b);
+      const all = window.speechSynthesis.getVoices();
+      if (!all.length) return;
+      // Filter: English only, exclude novelty/joke voices
+      log('Voices available: ' + all.length + ' total from browser', 'if');
+      const en = all.filter(v =>
+        v.lang.startsWith('en') &&
+        !EXCLUDED_VOICES.some(e => v.name.toLowerCase().includes(e))
+      );
+      log('After filtering: ' + en.length + ' English non-novelty voices', 'if');
+      // Safety net: if filtering leaves nothing, use all English voices
+      // If still nothing, use ALL voices (better than empty dropdown)
+      if (en.length > 0) {
+        voices = en;
+      } else {
+        const allEn = all.filter(v => v.lang.startsWith('en'));
+        voices = allEn.length > 0 ? allEn : all;
+        log('⚠ Using unfiltered voices — filtered list was empty', 'wn');
+      }
+      // Sort: Google US first, then US, then others
+      voices.sort((a, b) => {
+        const score = v => {
+          if (v.name.toLowerCase().includes('google') && v.lang === 'en-US') return 0;
+          if (v.lang === 'en-US') return 1;
+          if (v.name.toLowerCase().includes('google')) return 2;
+          if (v.lang.startsWith('en')) return 3;
+          return 4;
+        };
+        return score(a) - score(b);
       });
       vsel.innerHTML = '';
       voices.forEach((v, i) => {
@@ -764,36 +820,49 @@
         o.value = i; o.textContent = v.name + (v.localService ? '' : ' ☁');
         vsel.appendChild(o);
       });
-      pickVoiceForGender(genderEl.value);
+      pickVoiceForGender(genderEl.value || 'female');
       log('✓ Voices: ' + voices.length + ' — using: ' + voices[vsel.value]?.name, 'ok');
     }
     window.speechSynthesis.onvoiceschanged = fillVoices;
     fillVoices();
-    setTimeout(fillVoices, 800);
+    setTimeout(fillVoices, 100);
+    setTimeout(fillVoices, 500);
+    setTimeout(fillVoices, 1000);
+    setTimeout(fillVoices, 1500); // Extra retry for iOS — loads voices late
+    setTimeout(fillVoices, 3000); // Final fallback for slow local environments
 
     function pickVoiceForGender(g) {
       if (!voices.length) return;
-      const male = ['david', 'mark', 'james', 'ryan', 'guy', 'george'];
-      const female = ['zira', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny'];
-      const kw = g === 'male' ? male : female;
+      const maleKw   = ['david', 'mark', 'james', 'ryan', 'guy', 'george', 'richard', 'daniel', 'arthur', 'oliver', 'thomas'];
+      const femaleKw = ['zira', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny', 'natasha', 'moira', 'fiona', 'kate', 'victoria'];
+      const kw = g === 'male' ? maleKw : femaleKw;
 
-      // Priority 1: Google US English
-      const googleUS = voices.findIndex(v =>
+      // Priority 1: Google US English matching gender
+      const p1 = voices.findIndex(v =>
+        v.name.toLowerCase().includes('google') && v.lang === 'en-US' &&
+        kw.some(k => v.name.toLowerCase().includes(k)));
+      if (p1 >= 0) { vsel.value = p1; return; }
+
+      // Priority 2: Any Google US English
+      const p2 = voices.findIndex(v =>
         v.name.toLowerCase().includes('google') && v.lang === 'en-US');
-      if (googleUS >= 0) { vsel.value = googleUS; return; }
+      if (p2 >= 0) { vsel.value = p2; return; }
 
-      // Priority 2: Any US English matching gender
-      const usGen = voices.findIndex(v =>
+      // Priority 3: US English matching gender keywords
+      const p3 = voices.findIndex(v =>
         v.lang === 'en-US' && kw.some(k => v.name.toLowerCase().includes(k)));
-      if (usGen >= 0) { vsel.value = usGen; return; }
+      if (p3 >= 0) { vsel.value = p3; return; }
 
-      // Priority 3: Any US English
-      const usAny = voices.findIndex(v => v.lang === 'en-US');
-      if (usAny >= 0) { vsel.value = usAny; return; }
+      // Priority 4: Any US English
+      const p4 = voices.findIndex(v => v.lang === 'en-US');
+      if (p4 >= 0) { vsel.value = p4; return; }
 
-      // Fallback: any Google voice
-      const google = voices.findIndex(v => v.name.toLowerCase().includes('google'));
-      if (google >= 0) vsel.value = google;
+      // Priority 5: Any English matching gender
+      const p5 = voices.findIndex(v => kw.some(k => v.name.toLowerCase().includes(k)));
+      if (p5 >= 0) { vsel.value = p5; return; }
+
+      // Fallback: first voice
+      if (voices.length) vsel.value = 0;
     }
     function getVoice() { return voices[parseInt(vsel.value)] || voices[0] || null; }
 
@@ -801,15 +870,62 @@
     function speak(text) {
       return new Promise(resolve => {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.voice = getVoice(); u.rate = 0.93; u.pitch = 1.05; u.volume = 1;
-        speaking = true; avEl.className = 'speaking';
-        avst.textContent = 'Speaking…';
-        log('🔊 ' + text.slice(0, 70) + (text.length > 70 ? '…' : ''), 'if');
-        u.onend = () => { speaking = false; avEl.className = 'idle'; avst.textContent = 'Your turn'; log('✓ Done speaking', 'ok'); resolve(); };
-        u.onerror = e => { log('❌ TTS: ' + e.error, 'er'); speaking = false; avEl.className = 'idle'; resolve(); };
-        window.speechSynthesis.speak(u);
+        // iOS needs a small delay after cancel before speaking
+        setTimeout(() => {
+          const u = new SpeechSynthesisUtterance(text);
+          u.voice = getVoice();
+          u.rate  = IS_IOS ? 0.88 : 0.93; // Slightly slower on iOS
+          u.pitch = 1.05; u.volume = 1;
+          speaking = true; avEl.className = 'speaking';
+          avst.textContent = 'Speaking…';
+          log('🔊 ' + text.slice(0, 70) + (text.length > 70 ? '…' : ''), 'if');
+
+          function onDone() {
+            speaking = false; avEl.className = 'idle';
+            avst.textContent = 'Your turn';
+            log('✓ Done speaking', 'ok');
+            resolve();
+          }
+          u.onend = onDone;
+          u.onerror = e => { log('❌ TTS: ' + e.error, 'er'); speaking = false; avEl.className = 'idle'; resolve(); };
+
+          // iOS Safari TTS keep-alive — prevents cutting off mid-sentence
+          if (IS_IOS) {
+            const iosTimer = setInterval(() => {
+              if (!speaking) { clearInterval(iosTimer); return; }
+              window.speechSynthesis.pause();
+              window.speechSynthesis.resume();
+            }, 10000);
+            const origDone = onDone;
+            u.onend = () => { clearInterval(iosTimer); origDone(); };
+            u.onerror = e => { clearInterval(iosTimer); log('❌ TTS: ' + e.error, 'er'); speaking = false; avEl.className = 'idle'; resolve(); };
+          }
+
+          window.speechSynthesis.speak(u);
+        }, IS_IOS ? 100 : 0);
       });
+    }
+
+    // ── iOS silence timer ─────────────────────────────────────────────────────
+    // iOS doesn't reliably fire isFinal — auto-submit after 2s of silence
+    function startSilenceTimer() {
+      if (!IS_IOS) return;
+      clearSilenceTimer();
+      silenceStart = Date.now();
+      silenceTimer = setTimeout(() => {
+        const text = (finalTxt + interimTxt).trim();
+        log('⏱ iOS auto-submit after silence: ' + text, 'wn');
+        if (recording && text) {
+          finalTxt = text; // promote interim to final
+          stopRec();
+        }
+      }, SILENCE_DELAY);
+    }
+
+    function clearSilenceTimer() {
+      clearTimeout(silenceTimer);
+      cancelAnimationFrame(silenceAnimFrame);
+      silenceTimer = null; silenceStart = null;
     }
 
     // ── AI call — no API key in browser, server handles it ─────────────────────
@@ -869,26 +985,60 @@
     // ── Speech recognition ─────────────────────────────────────────────────────
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      log('❌ SpeechRecognition not available — use Google Chrome!', 'er');
-      addBubble('⚠ Please open this page in Google Chrome to use voice.', 'er');
-      micEl.disabled = true;
+      log('❌ SpeechRecognition not available', 'er');
+      if (!IS_IOS) {
+        addBubble('⚠ Please open this page in Google Chrome to use voice.', 'er');
+        micEl.disabled = true;
+      }
     } else {
       recog = new SR();
-      recog.lang = 'en-US'; recog.interimResults = true; recog.continuous = true; recog.maxAlternatives = 1;
-      recog.onstart = () => log('🎙 Mic started', 'ok');
-      recog.onend = () => { if (recording) { try { recog.start(); } catch (e) { } } };
+      recog.lang = 'en-US';
+      recog.interimResults = true;
+      recog.continuous = !IS_IOS; // iOS doesn't support continuous reliably
+      recog.maxAlternatives = 1;
+
+      recog.onstart = () => log('🎙 Mic started' + (IS_IOS ? ' (iOS mode)' : ''), 'ok');
+
+      recog.onend = () => {
+        log('Mic ended (recording=' + recording + ')', '');
+        if (recording) {
+          if (IS_IOS) {
+            // iOS stops after each utterance — check if we have text to submit
+            const combinedText = (finalTxt + interimTxt).trim();
+            if (combinedText && !silenceTimer) {
+              finalTxt = combinedText;
+              stopRec();
+            } else {
+              try { recog.start(); log('iOS: restarted mic', 'wn'); }
+              catch (e) { log('iOS restart err: ' + e.message, 'er'); }
+            }
+          } else {
+            try { recog.start(); } catch (e) { }
+          }
+        }
+      };
+
       recog.onerror = e => {
-        if (e.error === 'no-speech') return;
         log('❌ Mic error: ' + e.error, 'er');
-        if (e.error === 'not-allowed') addBubble('⚠ Microphone permission denied. Allow mic in Chrome and try again.', 'er');
+        if (e.error === 'no-speech') {
+          // iOS fires no-speech often — just restart quietly
+          if (IS_IOS && recording) { try { recog.start(); } catch (err) { } }
+          return;
+        }
+        if (e.error === 'not-allowed') addBubble('⚠ Microphone permission denied. Allow mic access and try again.', 'er');
         stopRec();
       };
+
       recog.onresult = e => {
         let interim = '';
+        let newFinal = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) finalTxt += e.results[i][0].transcript + ' ';
+          if (e.results[i].isFinal) newFinal += e.results[i][0].transcript + ' ';
           else interim = e.results[i][0].transcript;
         }
+        if (newFinal) finalTxt += newFinal;
+        interimTxt = interim;
+
         const disp = (finalTxt + interim).trim();
         if (!ib) {
           const h = document.getElementById('hint'); if (h) h.remove();
@@ -897,37 +1047,53 @@
         }
         ib.textContent = disp || '…';
         txEl.scrollTop = txEl.scrollHeight;
+
+        // iOS: restart silence timer on every new speech
+        if (IS_IOS) startSilenceTimer();
       };
     }
 
     function startRec() {
       if (speaking) { window.speechSynthesis.cancel(); speaking = false; }
-      finalTxt = ''; ib = null; recording = true;
+      finalTxt = ''; interimTxt = ''; ib = null; recording = true;
       micEl.classList.add('rec'); waveEl.classList.add('on');
       avst.textContent = 'Listening…';
+      mhint.textContent = IS_IOS
+        ? 'Speak clearly — auto-sends after pause'
+        : 'Listening — tap mic again when done';
       log('🎙 Starting mic…', 'if');
       try { recog.start(); } catch (e) { log('start() err: ' + e.message, 'er'); }
+      // iOS: start silence timer immediately
+      if (IS_IOS) startSilenceTimer();
     }
 
     function stopRec() {
       recording = false;
       micEl.classList.remove('rec'); waveEl.classList.remove('on');
+      clearSilenceTimer();
+      mhint.textContent = 'Tap to speak · tap again when done';
       try { recog.stop(); } catch (e) { }
       const text = finalTxt.trim();
-      if (ib) { ib.remove(); ib = null; } finalTxt = '';
-      if (!text) { log('⚠ Nothing captured', 'wn'); avst.textContent = 'Ready'; return; }
+      if (ib) { ib.remove(); ib = null; }
+      finalTxt = ''; interimTxt = '';
+      if (!text) { log('⚠ Nothing captured', 'wn'); avst.textContent = 'Ready — try again'; return; }
       log('🗣 You said: ' + text, 'if');
       addBubble(text, 'u');
       aiReply(text);
     }
 
     micEl.addEventListener('click', () => {
+      if (!SR) { log('No SR available', 'er'); return; }
+      log('Mic clicked — recording=' + recording, 'if');
       if (recording) stopRec(); else startRec();
     });
 
     // ── Init ───────────────────────────────────────────────────────────────────
     loadPrefs();
-    log('── English Buddy ready ─────────────', 'if');
+    log('── English Buddy ─────────────────────────', 'if');
+    log('Platform: ' + (IS_IOS ? 'iOS' : IS_ANDROID ? 'Android' : 'Desktop') +
+        ' | Browser: ' + (IS_CHROME ? 'Chrome' : IS_SAFARI ? 'Safari' : 'Other'), 'if');
+    log('SpeechRecognition: ' + (SR ? '✓ Available' : '✗ Not available'), SR ? 'ok' : 'er');
     log('englishbuddy.live — talk to Alex!', 'ok');
   </script>
 </body>
