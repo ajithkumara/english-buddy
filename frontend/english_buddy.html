@@ -642,7 +642,7 @@
       </div>
       <div class="row">
         <label>Partner name</label>
-        <input type="text" id="pnameinput" placeholder="e.g. Alex, Sarah" maxlength="20" value="Alex">
+        <input type="text" id="pnameinput" placeholder="e.g. Alexa, Alex" maxlength="20" value="Alexa">
         <select id="gendersel" style="max-width:100px">
           <option value="male">♂ Male</option>
           <option value="female">♀ Female</option>
@@ -714,7 +714,7 @@
   </div>
   <script>
     // ── Avatar photos (base64 embedded — no separate files needed) ──────────────
-    const GIRL_PHOTO =  '/girl.jpg';
+    const GIRL_PHOTO = '/girl.jpg';
     const BOY_PHOTO  = '/boy.jpg';
 
     function updateAvatarPhoto(gender) {
@@ -724,6 +724,66 @@
       photo.src = gender === 'female' ? GIRL_PHOTO : BOY_PHOTO;
       photo.classList.add('show');
       letter.classList.add('hidden');
+    }
+
+    // ── Lip-sync animation — cycles mouth frames while speaking ────────────────
+    // Frames are auto-aligned (face position/scale locked) to prevent jitter.
+    // Only built for female (girl) right now — add boy frames the same way later
+    const TALK_FRAMES = {
+      female: [
+        '/girl_frames/girl_smile.jpg',
+        '/girl_frames/girl_talk.jpg',
+        '/girl_frames/girl_open.jpg',
+        '/girl_frames/girl_talk.jpg',
+        '/girl_frames/girl_laugh.jpg',
+        '/girl_frames/girl_talk.jpg',
+        '/girl_frames/girl_closed.jpg',
+        '/girl_frames/girl_talk.jpg',
+      ],
+      male: null // no extra frames yet — falls back to static photo
+    };
+
+    let lipSyncTimer = null;
+    let lipSyncFrameIdx = 0;
+
+    // Preload all talk frames so the first speech has zero flicker/delay
+    function preloadTalkFrames() {
+      Object.values(TALK_FRAMES).forEach(frames => {
+        if (!frames) return;
+        [...new Set(frames)].forEach(src => {
+          const img = new Image();
+          img.src = src;
+        });
+      });
+    }
+    preloadTalkFrames();
+
+    function startLipSync(gender) {
+      const frames = TALK_FRAMES[gender];
+      if (!frames) return; // no animated frames for this gender yet — stay static
+      stopLipSync();
+      const photo = document.getElementById('av-photo');
+      lipSyncFrameIdx = 0;
+
+      lipSyncTimer = setInterval(() => {
+        photo.src = frames[lipSyncFrameIdx % frames.length];
+        lipSyncFrameIdx++;
+      }, 220); // ~4.5 frames/sec — fast enough to feel alive, slow enough to stay light
+    }
+
+    function stopLipSync() {
+      if (lipSyncTimer) { clearInterval(lipSyncTimer); lipSyncTimer = null; }
+      // Return to the static base photo for current gender
+      const gender = document.getElementById('gendersel').value || 'female';
+      updateAvatarPhoto(gender);
+    }
+
+    function defaultPartnerName(gender) {
+      // If user has not customised the name (still on a default), auto-switch it
+      const current = document.getElementById('pnameinput').value.trim();
+      if (gender === 'female' && (current === 'Alex' || current === ''))  return 'Alexa';
+      if (gender === 'male'   && (current === 'Alexa' || current === '')) return 'Alex';
+      return current; // custom name — leave it alone
     }
 
     // ── Prompts ────────────────────────────────────────────────────────────────
@@ -768,15 +828,26 @@
     // ── Persist user prefs (name only — no API keys) ──────────────────────────
     function loadPrefs() {
       unameEl.value  = localStorage.getItem('eb_un') || '';
-      pnameEl.value  = localStorage.getItem('eb_pn') || 'Alex';
       genderEl.value = localStorage.getItem('eb_gd') || 'female';
+
+      // Name: use saved name ONLY if it's not one of the defaults
+      // If saved name is Alex or Alexa, derive from current gender instead
+      const savedName = localStorage.getItem('eb_pn') || '';
+      const isDefault = ['alex', 'alexa', ''].includes(savedName.toLowerCase());
+      pnameEl.value = isDefault
+        ? (genderEl.value === 'female' ? 'Alexa' : 'Alex')
+        : savedName;
+
       avltr.textContent    = pname().charAt(0).toUpperCase();
       avnameEl.textContent = pname();
       updateAvatarPhoto(genderEl.value || 'female');
     }
     function savePrefs() {
+      // Auto-set partner name to Alex/Alexa when gender changes (unless customised)
+      const autoName = defaultPartnerName(genderEl.value);
+      pnameEl.value = autoName;
       localStorage.setItem('eb_un', unameEl.value.trim());
-      localStorage.setItem('eb_pn', pnameEl.value.trim());
+      localStorage.setItem('eb_pn', autoName);
       localStorage.setItem('eb_gd', genderEl.value);
       avltr.textContent    = pname().charAt(0).toUpperCase();
       avnameEl.textContent = pname();
@@ -856,8 +927,9 @@
         speaking = true; avEl.className = 'speaking';
         avst.textContent = 'Speaking…';
         log('🔊 ' + text.slice(0, 70) + (text.length > 70 ? '…' : ''), 'if');
-        u.onend = () => { speaking = false; avEl.className = 'idle'; avst.textContent = 'Your turn'; log('✓ Done speaking', 'ok'); resolve(); };
-        u.onerror = e => { log('❌ TTS: ' + e.error, 'er'); speaking = false; avEl.className = 'idle'; resolve(); };
+        startLipSync(genderEl.value || 'female');
+        u.onend = () => { speaking = false; avEl.className = 'idle'; avst.textContent = 'Your turn'; stopLipSync(); log('✓ Done speaking', 'ok'); resolve(); };
+        u.onerror = e => { log('❌ TTS: ' + e.error, 'er'); speaking = false; avEl.className = 'idle'; stopLipSync(); resolve(); };
         window.speechSynthesis.speak(u);
       });
     }
@@ -954,6 +1026,11 @@
           if (e.results[i].isFinal) finalTxt += e.results[i][0].transcript + ' ';
           else interim = e.results[i][0].transcript;
         }
+        interimTxt = interim; // keep in sync so pttEnd's fallback actually works
+        // If we're not in an active hold (or its grace window), don't spawn a
+        // bubble for it — finalTxt above still captures the words so a trailing
+        // grace window in pttEnd() can still pick them up; we just skip the UI.
+        if (!recording) return;
         const disp = (finalTxt + interim).trim();
         if (!ib) {
           const h = document.getElementById('hint'); if (h) h.remove();
@@ -966,7 +1043,7 @@
     }
 
     function startRec() {
-      if (speaking) { window.speechSynthesis.cancel(); speaking = false; }
+      if (speaking) { window.speechSynthesis.cancel(); speaking = false; stopLipSync(); }
       finalTxt = ''; ib = null; recording = true;
       micEl.classList.add('rec'); waveEl.classList.add('on');
       avst.textContent = 'Listening…';
@@ -1026,9 +1103,10 @@
       if (pttActive) return;
       pttActive   = true;
       pttHoldTime = Date.now();
-      if (speaking) { window.speechSynthesis.cancel(); speaking = false; }
+      if (speaking) { window.speechSynthesis.cancel(); speaking = false; stopLipSync(); }
 
       // Flip into recording mode — UI updates + start collecting results
+      if (ib) { ib.remove(); } // safety net: clear any bubble left over from a previous turn
       finalTxt = ''; interimTxt = ''; ib = null; recording = true;
       micEl.classList.add('rec'); waveEl.classList.add('on');
       avst.textContent = 'Listening…';
@@ -1062,8 +1140,13 @@
         return;
       }
 
-      // Good hold — process what we captured
-      log('PTT: sending…', 'if');
+      // Good hold — keep `recording` true briefly to catch trailing words still
+      // being recognized (STT has latency, so the tail of what you said often
+      // lands a few hundred ms after you release the button). This lets
+      // onresult keep updating the SAME bubble instead of dropping the words
+      // or spawning an orphaned one.
+      log('PTT: grace window — catching trailing speech…', 'if');
+      avst.textContent = 'Finishing up…';
       setTimeout(() => {
         // Grab text — prefer finalTxt, fall back to interim or bubble
         let text = finalTxt.trim();
@@ -1083,7 +1166,7 @@
         log('🗣 You said: ' + text, 'if');
         addBubble(text, 'u');
         aiReply(text);
-      }, 300);
+      }, 900);
     }
 
     // ── Mouse events ──────────────────────────────────────────────────────────
