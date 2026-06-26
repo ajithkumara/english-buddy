@@ -726,53 +726,33 @@
       letter.classList.add('hidden');
     }
 
-    // ── Lip-sync animation — cycles mouth frames while speaking ────────────────
-    // Frames are auto-aligned (face position/scale locked) to prevent jitter.
-    // Only built for female (girl) right now — add boy frames the same way later
-    const TALK_FRAMES = {
-      female: [
-        '/girl_frames/girl_smile.jpg',
-        '/girl_frames/girl_talk.jpg',
-        '/girl_frames/girl_open.jpg',
-        '/girl_frames/girl_talk.jpg',
-        '/girl_frames/girl_laugh.jpg',
-        '/girl_frames/girl_talk.jpg',
-        '/girl_frames/girl_closed.jpg',
-        '/girl_frames/girl_talk.jpg',
-      ],
-      male: null // no extra frames yet — falls back to static photo
+    // ── Lip-sync animation — swaps in a looping talking GIF while speaking ─────
+    // Browsers auto-loop animated GIFs in an <img> on their own, so no JS
+    // frame-cycling is needed — just point av-photo at the GIF while speaking
+    // and back at the static photo when done.
+    const TALK_GIF = {
+      female: '/girl_talking.gif',
+      male: '/boy_talking.gif'
     };
 
-    let lipSyncTimer = null;
-    let lipSyncFrameIdx = 0;
-
-    // Preload all talk frames so the first speech has zero flicker/delay
+    // Preload the talking GIF so the first speech has zero flicker/delay
     function preloadTalkFrames() {
-      Object.values(TALK_FRAMES).forEach(frames => {
-        if (!frames) return;
-        [...new Set(frames)].forEach(src => {
-          const img = new Image();
-          img.src = src;
-        });
+      Object.values(TALK_GIF).forEach(src => {
+        if (!src) return;
+        const img = new Image();
+        img.src = src;
       });
     }
     preloadTalkFrames();
 
     function startLipSync(gender) {
-      const frames = TALK_FRAMES[gender];
-      if (!frames) return; // no animated frames for this gender yet — stay static
-      stopLipSync();
+      const gif = TALK_GIF[gender];
+      if (!gif) return; // no animated GIF for this gender yet — stay static
       const photo = document.getElementById('av-photo');
-      lipSyncFrameIdx = 0;
-
-      lipSyncTimer = setInterval(() => {
-        photo.src = frames[lipSyncFrameIdx % frames.length];
-        lipSyncFrameIdx++;
-      }, 220); // ~4.5 frames/sec — fast enough to feel alive, slow enough to stay light
+      photo.src = gif; // browser loops this on its own while it stays the src
     }
 
     function stopLipSync() {
-      if (lipSyncTimer) { clearInterval(lipSyncTimer); lipSyncTimer = null; }
       // Return to the static base photo for current gender
       const gender = document.getElementById('gendersel').value || 'female';
       updateAvatarPhoto(gender);
@@ -872,7 +852,7 @@
     });
 
     // ── Voices ─────────────────────────────────────────────────────────────────
-    function fillVoices() {
+        function fillVoices() {
       const en = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
       if (!en.length) return;
       voices = en.sort((a, b) => {
@@ -894,21 +874,33 @@
 
     function pickVoiceForGender(g) {
       if (!voices.length) return;
-      const male = ['david', 'mark', 'james', 'ryan', 'guy', 'george'];
-      const female = ['zira', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny'];
-      const kw = g === 'male' ? male : female;
+      const maleNames   = ['david', 'mark', 'james', 'ryan', 'guy', 'george'];
+      const femaleNames = ['zira', 'samantha', 'karen', 'susan', 'linda', 'aria', 'jenny'];
 
-      // Priority 1: Google US English
+      // Note: 'female' contains 'male' as a substring, so checking for 'male'
+      // must explicitly exclude names containing 'female' or it'll false-match.
+      function matchesGender(name) {
+        const n = name.toLowerCase();
+        if (g === 'male') {
+          if (n.includes('female')) return false;
+          return n.includes('male') || maleNames.some(k => n.includes(k));
+        }
+        return n.includes('female') || femaleNames.some(k => n.includes(k));
+      }
+
+      // Priority 1: ANY voice whose name explicitly matches the requested gender —
+      // this must come before the "Google US English" fallback below, otherwise
+      // that blanket match wins every time and gender never actually changes anything.
+      const genMatch = voices.findIndex(v => matchesGender(v.name));
+      if (genMatch >= 0) { vsel.value = genMatch; return; }
+
+      // Priority 2: Google US English (best quality fallback when no gender-specific
+      // voice is installed at all)
       const googleUS = voices.findIndex(v =>
         v.name.toLowerCase().includes('google') && v.lang === 'en-US');
       if (googleUS >= 0) { vsel.value = googleUS; return; }
 
-      // Priority 2: Any US English matching gender
-      const usGen = voices.findIndex(v =>
-        v.lang === 'en-US' && kw.some(k => v.name.toLowerCase().includes(k)));
-      if (usGen >= 0) { vsel.value = usGen; return; }
-
-      // Priority 3: Any US English
+      // Priority 3: any US English
       const usAny = voices.findIndex(v => v.lang === 'en-US');
       if (usAny >= 0) { vsel.value = usAny; return; }
 
